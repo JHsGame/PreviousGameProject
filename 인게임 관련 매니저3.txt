@@ -1,0 +1,53 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class InGameButtonManager_Scr : MonoBehaviour
+{
+    private static InGameButtonManager_Scr instance;
+    InGameCashingManager_Scr cashing;
+    InGameManager_Scr manager;
+
+    public static InGameButtonManager_Scr Instance
+    {
+        get
+        {
+            if (instance != null)
+            {
+                return instance;
+            }
+            else
+                return null;
+        }
+    }
+
+    private void Awake()
+    {
+        if (instance != null)
+            return;
+        else
+        {
+            instance = this;
+        }
+    }
+
+    private void Start()
+    {
+        cashing = InGameCashingManager_Scr.Instance;
+        manager = InGameManager_Scr.Instance;
+    }
+
+    public void OnClickOption()
+    {
+        print("옵션");
+        if(cashing.OptionPanel != null)
+            cashing.OptionPanel.SetActive(true);
+    }
+
+    public void OutToLobbyButton()
+    {
+        SceneManager.LoadScene(1);
+        //StartCoroutine(manager.LoadScene());
+    }
+}

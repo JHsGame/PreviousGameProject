@@ -1,0 +1,478 @@
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class ManStat_Scr : MonoBehaviour
+{
+    #region 참조부분
+    public GameObject go_Playerbase;
+    #endregion
+
+    #region UI부분
+    public GameObject i_myIcon;
+    public TextMeshProUGUI t_myAtk;
+    public TextMeshProUGUI t_NextAtk;
+    public Text t_BoughtPrice;
+    public Text t_UpgradePrice;
+    public Text t_NextPrice;
+    public TextMeshProUGUI t_NameLevel;
+    public Text t_BuyButtonText;
+    public Text t_UpgradeButtonText;
+    public Text t_NextLevelButtonText;
+    public Text t_MaxLevelButtonText;
+    #endregion
+
+    #region 인력 정보
+    public int i_ListNum;   // 현재 인력 리스트에서 내가 몇번째인지 확인
+    public int i_Level;
+    public float f_Atk;
+    public int i_Money;
+    public int i_UpgradeNum;
+    public int i_UpgradeMoney; // 업그레이드 비용
+    public int i_TypeNum; // 해당 인력의 종류 번호 1:일용 2:알바 3:프리 4:인턴 5:계약 6:정규
+    public bool b_Bought = false;
+    public string s_Name;
+    #endregion
+
+    public GameObject g_LockPurchase;
+    public GameObject g_UnLockProduct;
+    public GameObject g_NextLevel;
+    public GameObject g_Upgrade;
+    public GameObject g_UpgradeMax;
+    public GameObject g_Price;
+    public GameObject g_TextAtk;
+    public GameObject g_ManNameLevel;
+
+    private int MaxLevel;
+    public string s_Level;
+    public bool b_Max = false;
+    public float f_TextAtk;
+
+
+    public TextAsset myTxt;
+    public List<Dictionary<string, object>> ManData;
+
+    // csv에서 데이터를 뽑고 데이터 내용을 주기 위한 변수들
+    string s_ManStat;
+    string[] s_ManSplit;
+
+    private void Start()
+    {
+        ManData = CSVReader.Read(myTxt);
+        s_ManStat = ManData[60]["LV"].ToString();
+        s_ManStat = s_ManStat.Substring(2);
+        MaxLevel = int.Parse(s_ManStat);
+        g_UpgradeMax.SetActive(false);
+    }
+
+    public void GetTutorial()
+    {
+        ManData = CSVReader.Read(myTxt);
+        s_ManStat = ManData[60]["LV"].ToString();
+        s_ManStat = s_ManStat.Substring(2);
+        MaxLevel = int.Parse(s_ManStat);
+        g_UpgradeMax.SetActive(false);
+    }
+
+    void Update()
+    {
+        if (this.gameObject.activeSelf)
+        {
+            ChangeFont();
+            if (g_LockPurchase.gameObject.activeSelf)
+            {
+                if (TranslateManager_Scr.instance.b_isEnglish)
+                {
+                    g_LockPurchase.transform.GetChild(1).GetChild(1).GetComponent<TextMeshProUGUI>().text = TranslateManager_Scr.instance.TranslateData[149][TranslateManager_Scr.instance.s_Language].ToString().Substring(0, 14)
+                        + "\n" + TranslateManager_Scr.instance.TranslateData[149][TranslateManager_Scr.instance.s_Language].ToString().Substring(15, 11);
+                }
+                else
+                {
+                    g_LockPurchase.transform.GetChild(1).GetChild(1).GetComponent<TextMeshProUGUI>().text = TranslateManager_Scr.instance.TranslateData[149][TranslateManager_Scr.instance.s_Language].ToString();
+                }
+
+                if (TranslateManager_Scr.instance.b_isEnglish || TranslateManager_Scr.instance.b_isIndia || TranslateManager_Scr.instance.b_isItalia || TranslateManager_Scr.instance.b_isGermany
+                    || TranslateManager_Scr.instance.b_isFrance || TranslateManager_Scr.instance.b_isVietnam)
+                {
+                    t_BuyButtonText.text = TranslateManager_Scr.instance.TranslateData[19]["English"].ToString();
+                }
+                else
+                {
+                    t_BuyButtonText.text = TranslateManager_Scr.instance.TranslateData[19][TranslateManager_Scr.instance.s_Language].ToString();
+                }
+            }
+            else if (g_Upgrade.gameObject.activeSelf)
+            {
+                if (TranslateManager_Scr.instance.b_isEnglish || TranslateManager_Scr.instance.b_isIndia || TranslateManager_Scr.instance.b_isItalia || TranslateManager_Scr.instance.b_isGermany
+                    || TranslateManager_Scr.instance.b_isFrance || TranslateManager_Scr.instance.b_isVietnam)
+                {
+                    t_UpgradeButtonText.text = TranslateManager_Scr.instance.TranslateData[20]["English"].ToString();
+                }
+                else
+                {
+                    t_UpgradeButtonText.text = TranslateManager_Scr.instance.TranslateData[20][TranslateManager_Scr.instance.s_Language].ToString();
+                }
+            }
+            else if (g_NextLevel.gameObject.activeSelf)
+            {
+                if (TranslateManager_Scr.instance.b_isEnglish || TranslateManager_Scr.instance.b_isIndia || TranslateManager_Scr.instance.b_isItalia || TranslateManager_Scr.instance.b_isGermany
+                    || TranslateManager_Scr.instance.b_isFrance || TranslateManager_Scr.instance.b_isVietnam)
+                {
+                    t_NextLevelButtonText.text = TranslateManager_Scr.instance.TranslateData[21]["English"].ToString();
+                }
+                else
+                {
+                    t_NextLevelButtonText.text = TranslateManager_Scr.instance.TranslateData[21][TranslateManager_Scr.instance.s_Language].ToString();
+                }
+            }
+
+            if (i_myIcon.activeSelf && i_UpgradeNum > 0)
+                i_myIcon.GetComponent<Image>().sprite = ManPowerManager_Scr.instance.s_Icon[i_UpgradeNum - 1];
+            if (ChangeManager_Scr.instance.i_CharType == 4)
+            {
+                if (g_TextAtk.activeSelf)
+                {
+                    f_TextAtk = f_Atk + (f_Atk * ((int)ChangeManager_Scr.instance.Script.PlayerUpgradeData[ChangeManager_Scr.instance.Script.i_nowUpgradeSteps]["Human_resources"] * 0.01f));
+                    f_TextAtk = Mathf.RoundToInt(f_TextAtk);
+
+                    if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                        t_myAtk.text = string.Concat(TranslateManager_Scr.instance.TranslateContext(136) + " ");
+                    else
+                        t_myAtk.text = string.Concat(TranslateManager_Scr.instance.TranslateData[136]["English"].ToString() + " ");
+
+                    t_myAtk.text = string.Concat(t_myAtk.text, (f_TextAtk).ToString());
+                }
+            }
+            else
+            {
+
+                if (g_TextAtk.activeSelf)
+                {
+                    if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                        t_myAtk.text = string.Concat(TranslateManager_Scr.instance.TranslateContext(136) + " ");
+                    else
+                        t_myAtk.text = string.Concat(TranslateManager_Scr.instance.TranslateData[136]["English"].ToString() + " ");
+                    t_myAtk.text = string.Concat(t_myAtk.text, f_Atk);
+                }
+
+
+            }
+            if (g_ManNameLevel.activeSelf)
+            {
+                if (i_UpgradeNum == MaxLevel)
+                {
+                    b_Max = true;
+                    g_NextLevel.SetActive(false);
+                    g_Price.SetActive(false);
+                    s_Level = "LvMAX";
+                    g_UpgradeMax.SetActive(true);
+                    g_Upgrade.transform.GetComponent<Button>().enabled = false;
+                    if (!TranslateManager_Scr.instance.b_isKorean && !TranslateManager_Scr.instance.b_isChinese && !TranslateManager_Scr.instance.b_isJapanese)
+                    {
+                        t_NameLevel.GetComponent<RectTransform>().anchoredPosition = new Vector2(135f, -20f);
+                        t_myAtk.GetComponent<RectTransform>().anchoredPosition = new Vector2(125f, -70f);
+                    }
+                    else
+                    {
+                        t_NameLevel.GetComponent<RectTransform>().anchoredPosition = new Vector2(135f, -20f);
+                        t_myAtk.GetComponent<RectTransform>().anchoredPosition = new Vector2(125f, -65f);
+                    }
+                }
+                else
+                {
+                    if (((i_UpgradeNum >= 11 && i_UpgradeNum <= 20) || i_UpgradeNum >= 51) &&
+                        !TranslateManager_Scr.instance.b_isKorean && !TranslateManager_Scr.instance.b_isJapanese && !TranslateManager_Scr.instance.b_isChinese)
+                    {
+                        t_NameLevel.GetComponent<RectTransform>().anchoredPosition = new Vector2(135f, -20f);
+                        t_myAtk.GetComponent<RectTransform>().anchoredPosition = new Vector2(125f, -70f);
+                    }
+                    else if (TranslateManager_Scr.instance.b_isJapanese && (i_UpgradeNum == 50 ||
+                        (i_UpgradeNum >= 11 && i_UpgradeNum <= 40)))
+                    {
+                        t_NameLevel.GetComponent<RectTransform>().anchoredPosition = new Vector2(135f, -20f);
+                        t_myAtk.GetComponent<RectTransform>().anchoredPosition = new Vector2(125f, -65f);
+                    }
+                    else
+                    {
+                        t_NameLevel.GetComponent<RectTransform>().anchoredPosition = new Vector2(135f, -10f);
+                        t_myAtk.GetComponent<RectTransform>().anchoredPosition = new Vector2(125f, -55f);
+                    }
+                    s_Level = string.Concat("Lv", i_Level);
+                }
+
+                t_NameLevel.text = s_Name + " " + s_Level;
+            }
+
+            if (!b_Bought)
+            {
+                g_UnLockProduct.SetActive(false);
+                t_BoughtPrice.text = i_Money.ToString() + "G";
+                this.gameObject.GetComponent<Image>().enabled = false;
+            }
+            else
+            {
+                g_LockPurchase.SetActive(false);
+                g_UnLockProduct.SetActive(true);
+                t_UpgradePrice.text = i_UpgradeMoney.ToString() + "G";
+
+                string nextAtk = "";
+                if (i_UpgradeNum != MaxLevel)
+                {
+                    nextAtk = ((int)ManData[i_UpgradeNum + 1]["Attack"]).ToString();
+                }
+                else
+                {
+                    nextAtk = ((int)ManData[i_UpgradeNum]["Attack"]).ToString();
+                }
+
+
+                t_NextAtk.text = string.Concat(TranslateManager_Scr.instance.TranslateContext(150) + " ", nextAtk);
+
+                this.gameObject.GetComponent<Image>().enabled = true;
+            }
+
+            switch (i_TypeNum)
+            {
+                case 0:
+                    if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                        s_Name = TranslateManager_Scr.instance.TranslateData[151][TranslateManager_Scr.instance.s_Language].ToString();
+                    else
+                        s_Name = TranslateManager_Scr.instance.TranslateData[151]["English"].ToString();
+                    break;
+                case 1:
+                    if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                        s_Name = TranslateManager_Scr.instance.TranslateData[152][TranslateManager_Scr.instance.s_Language].ToString();
+                    else
+                        s_Name = TranslateManager_Scr.instance.TranslateData[152]["English"].ToString();
+                    break;
+                case 2:
+                    if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                        s_Name = TranslateManager_Scr.instance.TranslateData[153][TranslateManager_Scr.instance.s_Language].ToString();
+                    else
+                        s_Name = TranslateManager_Scr.instance.TranslateData[153]["English"].ToString();
+                    break;
+                case 3:
+                    if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                        s_Name = TranslateManager_Scr.instance.TranslateData[154][TranslateManager_Scr.instance.s_Language].ToString();
+                    else
+                        s_Name = TranslateManager_Scr.instance.TranslateData[154]["English"].ToString();
+                    break;
+                case 4:
+                    if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                        s_Name = TranslateManager_Scr.instance.TranslateData[155][TranslateManager_Scr.instance.s_Language].ToString();
+                    else
+                        s_Name = TranslateManager_Scr.instance.TranslateData[155]["English"].ToString();
+                    break;
+                case 5:
+                    if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                        s_Name = TranslateManager_Scr.instance.TranslateData[156][TranslateManager_Scr.instance.s_Language].ToString();
+                    else
+                        s_Name = TranslateManager_Scr.instance.TranslateData[156]["English"].ToString();
+                    break;
+            }
+        }
+    }
+
+    public void OnClickManEmploy()
+    {
+        if (GoldManager_Scr.instance.i_Coin >= this.i_Money)
+        {
+            SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+            i_UpgradeNum++;
+            i_Level++;
+            s_ManStat = ManData[i_UpgradeNum]["Name_Korean"].ToString();
+            s_ManSplit = s_ManStat.Split('_');
+            s_ManStat = s_ManSplit[0];
+            s_Name = s_ManStat;
+            b_Bought = true;
+
+            if (ManPowerManager_Scr.instance.g_CheckImage.activeSelf)
+            {
+                ManPowerManager_Scr.instance.b_isSort = false;
+                ManPowerManager_Scr.instance.g_CheckImage.SetActive(false);
+            }
+
+            f_Atk = (int)ManData[i_UpgradeNum]["Attack"];
+            ManPowerManager_Scr.instance.b_IsLoaded = false;
+            GoldManager_Scr.instance.i_Coin -= i_Money;
+        }
+        else
+        {
+            SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+            FailedPurchaseManager_Scr.instance.b_isCoin = true;
+            FailedPurchaseManager_Scr.instance.OnFailedOn();
+        }
+    }
+
+    public void OnClickUpgradeMAN()
+    {
+        if (GoldManager_Scr.instance.i_Coin >= this.i_UpgradeMoney)
+        {
+            SoundManager_sfx.instance.PlaySE("Reinforcement", false);
+            if (!b_Max)
+                i_UpgradeNum++;
+
+            if (GoogleManager_Scr.instance != null && GoogleManager_Scr.instance.b_isLogin)
+                UpgradeAchieveCheck();
+
+            GoldManager_Scr.instance.i_Coin -= i_UpgradeMoney;
+
+            if (ManPowerManager_Scr.instance.g_CheckImage.activeSelf)
+            {
+                ManPowerManager_Scr.instance.b_isSort = false;
+                ManPowerManager_Scr.instance.g_CheckImage.SetActive(false);
+            }
+
+            i_UpgradeMoney = (int)ManData[i_UpgradeNum]["Buy"];
+            f_Atk = (int)ManData[i_UpgradeNum]["Attack"];
+
+            s_ManStat = ManData[i_UpgradeNum]["Name_Korean"].ToString();
+
+            s_ManSplit = s_ManStat.Split('_');
+            i_Level = int.Parse(s_ManSplit[1].Substring(2));
+
+            s_ManStat = ManData[i_UpgradeNum]["Texture"].ToString();
+            s_ManSplit = s_ManStat.Split('_');
+            s_ManStat = s_ManSplit[1];
+
+            if (int.Parse(s_ManStat) == 9)
+            {
+                t_NextPrice.text = i_UpgradeMoney.ToString() + "G";
+                g_NextLevel.SetActive(true);
+                g_Upgrade.SetActive(false);
+            }
+            else
+            {
+                if (!g_Upgrade.activeSelf)
+                    g_Upgrade.SetActive(true);
+                g_NextLevel.SetActive(false);
+            }
+
+            s_ManStat = ManData[i_UpgradeNum]["Modeling"].ToString();
+            s_ManStat = s_ManStat.Substring(6);
+
+            i_TypeNum = int.Parse(s_ManStat) - 1;
+
+            s_ManStat = ManData[i_UpgradeNum]["Name_Korean"].ToString();
+            s_ManSplit = s_ManStat.Split('_');
+            s_ManStat = s_ManSplit[0];
+            s_Name = s_ManStat;
+        }
+        else
+        {
+            SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+            FailedPurchaseManager_Scr.instance.b_isCoin = true;
+            FailedPurchaseManager_Scr.instance.OnFailedOn();
+        }
+
+        switch (i_TypeNum)
+        {
+            case 0:
+                if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                    s_Name = TranslateManager_Scr.instance.TranslateData[151][TranslateManager_Scr.instance.s_Language].ToString();
+                else
+                    s_Name = TranslateManager_Scr.instance.TranslateData[151]["English"].ToString();
+                break;
+            case 1:
+                if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                    s_Name = TranslateManager_Scr.instance.TranslateData[152][TranslateManager_Scr.instance.s_Language].ToString();
+                else
+                    s_Name = TranslateManager_Scr.instance.TranslateData[152]["English"].ToString();
+                break;
+            case 2:
+                if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                    s_Name = TranslateManager_Scr.instance.TranslateData[153][TranslateManager_Scr.instance.s_Language].ToString();
+                else
+                    s_Name = TranslateManager_Scr.instance.TranslateData[153]["English"].ToString();
+                break;
+            case 3:
+                if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                    s_Name = TranslateManager_Scr.instance.TranslateData[154][TranslateManager_Scr.instance.s_Language].ToString();
+                else
+                    s_Name = TranslateManager_Scr.instance.TranslateData[154]["English"].ToString();
+                break;
+            case 4:
+                if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                    s_Name = TranslateManager_Scr.instance.TranslateData[155][TranslateManager_Scr.instance.s_Language].ToString();
+                else
+                    s_Name = TranslateManager_Scr.instance.TranslateData[155]["English"].ToString();
+                break;
+            case 5:
+                if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                    s_Name = TranslateManager_Scr.instance.TranslateData[156][TranslateManager_Scr.instance.s_Language].ToString();
+                else
+                    s_Name = TranslateManager_Scr.instance.TranslateData[156]["English"].ToString();
+                break;
+        }
+    }
+
+    public void UpgradeAchieveCheck()
+    {
+        if (!ManPowerManager_Scr.instance.b_isGetAchievement[0] && i_TypeNum == 0)
+        {
+            ManPowerManager_Scr.instance.b_isGetAchievement[0] = true;
+            GoogleManager_Scr.instance.GetAchievementFirstDailyJob();
+        }
+        else if (!ManPowerManager_Scr.instance.b_isGetAchievement[1] && i_TypeNum == 1)
+        {
+            ManPowerManager_Scr.instance.b_isGetAchievement[1] = true;
+            GoogleManager_Scr.instance.GetAchievementFirstAlba();
+        }
+        else if (!ManPowerManager_Scr.instance.b_isGetAchievement[2] && i_TypeNum == 2)
+        {
+            ManPowerManager_Scr.instance.b_isGetAchievement[2] = true;
+            GoogleManager_Scr.instance.GetAchievementFirstIntern();
+        }
+        else if (!ManPowerManager_Scr.instance.b_isGetAchievement[3] && i_TypeNum == 3)
+        {
+            ManPowerManager_Scr.instance.b_isGetAchievement[3] = true;
+            GoogleManager_Scr.instance.GetAchievementFirstContract();
+        }
+        else if (!ManPowerManager_Scr.instance.b_isGetAchievement[4] && i_TypeNum == 4)
+        {
+            ManPowerManager_Scr.instance.b_isGetAchievement[4] = true;
+            GoogleManager_Scr.instance.GetAchievementFirstRegular();
+        }
+        else if (!ManPowerManager_Scr.instance.b_isGetAchievement[5] && i_TypeNum == 5 && i_UpgradeNum == MaxLevel)
+        {
+            ManPowerManager_Scr.instance.b_isGetAchievement[5] = true;
+            GoogleManager_Scr.instance.GetAchievementFirstEmployeeMax();
+        }
+    }
+
+    public int GetMeshNum()
+    {
+        s_ManStat = ManData[i_UpgradeNum]["Texture"].ToString();
+        s_ManSplit = s_ManStat.Split('_');
+        s_ManStat = s_ManSplit[1];
+        return int.Parse(s_ManStat);
+    }
+
+    public void OnPointerEnter()
+    {
+        ManPowerManager_Scr.instance.b_isPointerEnter = true;
+    }
+
+    public void OnPointerExit()
+    {
+        ManPowerManager_Scr.instance.b_isPointerEnter = false;
+    }
+
+    public void ChangeFont()
+    {
+        TranslateManager_Scr.instance.ChangeFont(t_NextAtk, TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFont(t_BuyButtonText);
+        TranslateManager_Scr.instance.ChangeFont(t_UpgradeButtonText);
+        TranslateManager_Scr.instance.ChangeFont(t_NextLevelButtonText);
+        TranslateManager_Scr.instance.ChangeFont(t_MaxLevelButtonText);
+
+        TranslateManager_Scr.instance.ChangeFont(g_LockPurchase.transform.GetChild(1).GetChild(1).GetComponent<TextMeshProUGUI>(), TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFontMaterial(g_LockPurchase.transform.GetChild(1).GetChild(1).GetComponent<TextMeshProUGUI>(), TranslateManager_Scr.instance.i_TMPNum + 6);
+        TranslateManager_Scr.instance.ChangeFont(t_NameLevel, TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFontMaterial(t_NameLevel, TranslateManager_Scr.instance.i_TMPNum + 6);
+        TranslateManager_Scr.instance.ChangeFont(t_myAtk, TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFontMaterial(t_myAtk, TranslateManager_Scr.instance.i_TMPNum + 6);
+    }
+}

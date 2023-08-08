@@ -1,0 +1,284 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class AnimationManager_Scr : MonoBehaviour
+{
+    public PlayerSkill_Scr skill_Scr;
+    public ShotJoystick shot_Scr;
+    public MoveJoystick move_Scr;
+    public GameObject SkillHitBox;
+    public int i_ContinueNum = 0;
+    public int i_Count_continuousattack = 0;
+    public bool b_isUseSkill = false;
+    public bool b_CantShoot = false;
+
+    float tmpEnergy = 0;
+
+    public void ShootBullet()
+    {
+        if (transform.parent.GetComponent<PlayerStat_Scr>())
+        {
+            if (i_ContinueNum > 0)
+            {
+                if (transform.parent.GetComponent<PlayerStat_Scr>().stat.Damage <= transform.parent.GetComponent<PlayerStat_Scr>().stat.Energy)
+                {
+                    tmpEnergy = transform.parent.GetComponent<PlayerStat_Scr>().stat.Energy - transform.parent.GetComponent<PlayerStat_Scr>().stat.Damage;
+                    if (transform.parent.GetComponent<PlayerStat_Scr>().stat.AttackType == Character_Stat_Scr.AttackTypes.Firing ||
+                        transform.parent.GetComponent<PlayerStat_Scr>().stat.AttackType == Character_Stat_Scr.AttackTypes.Throw)
+                    {
+                        if (tmpEnergy <= 0)
+                            tmpEnergy = 0;
+                        transform.parent.GetComponent<PlayerStat_Scr>().stat.SetWeaponEnergy(tmpEnergy);
+                    }
+                    transform.parent.GetComponent<PlayerBehavior_Scr>().ShootBullet();
+                }
+                else
+                {
+                    b_CantShoot = true;
+                    i_ContinueNum = transform.parent.GetComponent<PlayerStat_Scr>().stat.Continue;
+                }
+            }
+        }
+        else if (transform.parent.GetComponent<AIStat_Scr>())
+        {
+            if (i_ContinueNum > 0)
+            {
+                if (transform.parent.GetComponent<AIStat_Scr>().stat.Damage <= transform.parent.GetComponent<AIStat_Scr>().stat.Energy)
+                {
+                    tmpEnergy = transform.parent.GetComponent<AIStat_Scr>().stat.Energy - transform.parent.GetComponent<AIStat_Scr>().stat.Damage;
+                    if (transform.parent.GetComponent<AIStat_Scr>().stat.AttackType == Character_Stat_Scr.AttackTypes.Firing ||
+                        transform.parent.GetComponent<AIStat_Scr>().stat.AttackType == Character_Stat_Scr.AttackTypes.Throw)
+                    {
+                        if (tmpEnergy <= 0)
+                            tmpEnergy = 0;
+                        transform.parent.GetComponent<AIStat_Scr>().stat.SetWeaponEnergy(tmpEnergy);
+                    }
+                    transform.parent.GetComponent<AIBehavior_Scr>().ShootBullet();
+                }
+                else
+                {
+                    b_CantShoot = true;
+                    i_ContinueNum = transform.parent.GetComponent<AIStat_Scr>().stat.Continue;
+                }
+            }
+        }
+    }
+
+    public void ContinueCheck()
+    {
+        i_ContinueNum--;
+        if (i_ContinueNum <= 0)
+        {
+            /*if (transform.parent.GetComponent<PlayerStat_Scr>().i_CharNum != 6 && transform.parent.GetComponent<PlayerStat_Scr>().i_CharNum != 10)
+            {
+                if (transform.parent.GetComponent<PlayerStat_Scr>().b_isDontMove)
+                    transform.parent.GetComponent<PlayerStat_Scr>().b_isDontMove = false;
+            }
+            else
+                Invoke("lateMove", 0.5f);*/
+            transform.GetComponent<Animator>().SetBool("isAttack", false);
+        }
+    }
+
+    public void lateMove()
+    {
+        //transform.parent.GetComponent<PlayerStat_Scr>().b_isDontMove = false;
+    }
+
+    public void AttackFalse()
+    {
+        i_ContinueNum--;
+        if (i_ContinueNum <= 0)
+        {
+            transform.GetComponent<Animator>().SetBool("isAttack", false);
+        }
+
+        if (b_CantShoot)
+        {
+            if (transform.parent.GetComponent<PlayerBehavior_Scr>())
+            {
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_isAttacking = false;
+                transform.GetComponent<Animator>().SetBool("isAttack", false);
+            }
+
+            b_CantShoot = !b_CantShoot;
+        }
+    }
+
+    public void AddDamageStart()
+    {
+        transform.parent.GetComponent<PlayerBehavior_Scr>().b_isCharging = true;
+    }
+
+    public void AddDamageEnd()
+    {
+        transform.parent.GetComponent<PlayerBehavior_Scr>().b_isCharging = false;
+    }
+
+    public void AttackParameters_On()
+    {
+        transform.GetComponent<Animator>().SetBool("AttackButton", true);
+    }
+
+    public void AttackParameters_Off()
+    {
+        transform.GetComponent<Animator>().SetBool("AttackButton", false);
+    }
+
+    public void AttackSpeed_0()
+    {
+        transform.GetComponent<Animator>().SetFloat("AttackSpeed", 0);
+    }
+
+    public void AttackSpeed_0_Continuousattack(int TotalCount)
+    {
+        /*
+        if (i_Count_continuousattack == 0)
+        {
+            transform.GetComponent<Animator>().SetFloat("AttackSpeed", 0);
+        }
+        i_Count_continuousattack++;
+        if (i_Count_continuousattack >= TotalCount)
+        {
+            transform.GetComponent<Animator>().SetBool("isAttack", false);
+            i_Count_continuousattack = 0;
+        }
+        */
+    }
+
+    public void AttackSpeed_1()
+    {
+        transform.GetComponent<Animator>().SetFloat("AttackSpeed", 1);
+    }
+
+    public void lockAction_moveattack() // 이동, 공격 lock
+    {
+        b_isUseSkill = true;
+        shot_Scr.b_LockAttack = true;
+        move_Scr.b_LockMove = true;
+        resetvalue_MoveAttackJoy();
+    }
+
+    public void unlockAction_moveattack() // 이동, 공격 unlock
+    {
+        Invoke("AttackStatusLate", 0.5f);
+        shot_Scr.b_LockAttack = false;
+        move_Scr.b_LockMove = false;
+    }
+
+    public void resetvalue_MoveAttackJoy()
+    {
+        shot_Scr.ButtonPressed = false;
+        move_Scr.ButtonPressed = false;
+    }
+
+    public void lockAction_move() // 이동 lock
+    {
+        b_isUseSkill = true;
+        move_Scr.b_LockMove = true;
+        resetvalue_MoveJoy();
+    }
+
+    public void unlockAction_move() // 이동 unlock
+    {
+        Invoke("AttackStatusLate", 0.5f);
+        move_Scr.b_LockMove = false;
+    }
+
+    public void resetvalue_MoveJoy()
+    {
+        move_Scr.ButtonPressed = false;
+    }
+
+    public void lockAction_attack() // 공격 lock
+    {
+        b_isUseSkill = true;
+        shot_Scr.b_LockAttack = true; 
+        resetvalue_AttackJoy();
+    }
+
+    public void unlockAction_attack() // 공격 unlock
+    {
+        Invoke("AttackStatusLate", 0.5f);
+        shot_Scr.b_LockAttack = false;
+    }
+
+    public void AttackStatusLate()
+    {
+        b_isUseSkill = false;
+    }
+
+    public void resetvalue_AttackJoy()
+    {
+        shot_Scr.ButtonPressed = false;
+    }
+
+    public void endSkillMotion(int CharNum)
+    {
+        switch (CharNum)
+        {
+            case 4:
+                transform.GetComponent<Animator>().SetBool("isSkill", false);
+                break;
+            case 3:
+            case 6:
+            case 14:
+                skill_Scr.f_DuringTime = 0;
+                break;
+        }
+    }
+
+    public void useSkillMotion(int CharNum)
+    {
+        switch (CharNum)
+        {
+            case 5:
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_usingSkill_BonusSpeed = false;
+                SkillObjManager_Scr.instance.getSkillObj(7, skill_Scr.myStat.gameObject, skill_Scr.transform.GetChild(0).gameObject);
+                break;
+            case 8:
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_usingSkill_BonusSpeed = false;
+                SkillHitBox.SetActive(true);
+                break;
+            case 11:
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_usingSkill_BonusSpeed = false;
+                SkillObjManager_Scr.instance.getSkillObj(0, skill_Scr.myStat.gameObject, skill_Scr.transform.GetChild(0).gameObject);
+                break;
+            case 12:
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_usingSkill_BonusSpeed = false;
+                SkillObjManager_Scr.instance.getSkillObj(1, skill_Scr.myStat.gameObject, skill_Scr.transform.GetChild(0).gameObject);
+                break;
+            case 15:
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_usingSkill_BonusSpeed = false;
+                SkillObjManager_Scr.instance.getSkillObj(2, skill_Scr.myStat.gameObject, skill_Scr.transform.GetChild(0).gameObject);
+                break;
+            case 16:
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_usingSkill_BonusSpeed = false;
+                skill_Scr.FanshapeColAttack();
+                break;
+            case 17:
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_usingSkill_BonusSpeed = false;
+                skill_Scr.FanshapeColAttack();
+                break;
+            case 18:
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_usingSkill_BonusSpeed = false;
+                SkillObjManager_Scr.instance.getSkillObj(3, skill_Scr.myStat.gameObject, skill_Scr.transform.GetChild(0).gameObject);
+                break;
+            case 19:
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_usingSkill_BonusSpeed = false;
+                SkillObjManager_Scr.instance.getSkillObj(4, skill_Scr.myStat.gameObject, skill_Scr.transform.GetChild(0).gameObject);
+                break;
+            case 22:
+                SkillObjManager_Scr.instance.getSkillObj(5, skill_Scr.myStat.gameObject, skill_Scr.transform.GetChild(0).gameObject);
+                break;
+            case 23:
+                skill_Scr.useSkill23();
+                break;
+            case 24:
+                transform.parent.GetComponent<PlayerBehavior_Scr>().b_usingSkill_BonusSpeed = false;
+                SkillObjManager_Scr.instance.getSkillObj(6, skill_Scr.myStat.gameObject, skill_Scr.transform.GetChild(0).gameObject);
+                break;
+        }
+    }
+}

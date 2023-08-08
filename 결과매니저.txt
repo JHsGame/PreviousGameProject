@@ -1,0 +1,94 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class RewardManager_Scr : MonoBehaviour
+{
+    private static RewardManager_Scr instance;
+    
+    InGameCashingManager_Scr cashing;
+    InGameManager_Scr manager;
+    
+    public List<GameObject> Players = new List<GameObject>();
+
+    [SerializeField]
+    private float f_LeftTime;
+
+
+    private void Awake()
+    {
+        if (instance != null)
+            return;
+        instance = this;
+    }
+
+    public static RewardManager_Scr Instance
+    {
+        get
+        {
+            if (null == instance)
+                return null;
+            return instance;
+        }
+    }
+
+    private void Start()
+    {
+        cashing = InGameCashingManager_Scr.Instance;
+        manager = InGameManager_Scr.Instance;
+    }
+
+    public void Update()
+    {
+        if (cashing.EndFlag)
+        {
+            if (f_LeftTime > 0.5f)
+            {
+                f_LeftTime -= Time.deltaTime;
+            }
+            else
+            {
+                f_LeftTime = 0;
+                if (!cashing.Load)
+                {
+                    cashing.Load = true;
+                    StartCoroutine(manager.LoadScene());
+                }
+            }
+            cashing.LeftTime.text = ((int)f_LeftTime).ToString();
+        }
+    }
+
+    public void activeChildOBJ()
+    {
+        cashing.EndFlag = true;
+
+        for (int i = 0; i < cashing.RewardCanvas.transform.childCount; i++)
+        {
+            cashing.RewardCanvas.transform.GetChild(i).gameObject.SetActive(true);
+        }
+    }
+
+    public int getRank(GameObject player)
+    {
+        Players.Remove(player);
+
+        if(Players.Count == 1)
+        {
+            PlayerStat_Scr script = Players[0].transform.GetComponent<PlayerStat_Scr>();
+            script.VictoryCheck();
+            activeChildOBJ();
+        }
+
+        return Players.Count + 1;
+    }
+
+    public void setResultText(string name, int rank, int reward)
+    {
+        cashing.Name.text = name;
+        cashing.Rank.text = string.Concat(rank, "위");
+        cashing.Reward.text = string.Concat("G ", reward);
+    }
+}

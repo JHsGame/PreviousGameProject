@@ -1,0 +1,77 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class InventoryButton_Scr : MonoBehaviour
+{
+    private static InventoryButton_Scr Instance;
+
+    public static InventoryButton_Scr instance { get => Instance; }
+
+    void Start()
+    {
+        if (Instance != null)
+        {
+            return;
+        }
+        else
+        {
+            Instance = this;
+        }
+    }
+
+    public void OnClickInventoryLevelUp()
+    {
+        // 일정 가격 이상일 때에만 구매 가능.
+        if (GoldManager_Scr.instance.i_Gem >= Inventory_Scr.instance.InventoryPrice)
+        {
+            GoldManager_Scr.instance.i_Gem -= Inventory_Scr.instance.InventoryPrice;
+            Inventory_Scr.instance.InventoryLevel++;
+
+            Inventory_Scr.instance.InitInventory();
+        }
+    }
+
+    public void OnClickCombinationOrSell()
+    {
+        if (InventoryCashing_Scr.instance.CombinationMode)
+        {
+            Inventory_Scr.instance.ItemCombination();
+        }
+        else if (InventoryCashing_Scr.instance.SellMode)
+        {
+            Inventory_Scr.instance.SellSlots();
+        }
+    }
+
+    public void OnClickCombinationModeOnOnOff()
+    {
+        if (!InventoryCashing_Scr.instance.CombinationMode)
+        {
+            Inventory_Scr.instance.ClearList();
+            InventoryCashing_Scr.instance.CombinationMode = true;
+            InventoryCashing_Scr.instance.SellMode = false;
+        }
+        else
+        {
+            Inventory_Scr.instance.ClearList();
+            InventoryCashing_Scr.instance.CombinationMode = false;
+        }
+    }
+
+    public void OnClickSellModeOnOff()
+    {
+        if (!InventoryCashing_Scr.instance.SellMode)
+        {
+            Inventory_Scr.instance.ClearList();
+            InventoryCashing_Scr.instance.SellMode = true;
+            InventoryCashing_Scr.instance.CombinationMode = false;
+        }
+        else
+        {
+            Inventory_Scr.instance.ClearList();
+            InventoryCashing_Scr.instance.SellMode = false;
+        }
+    }
+}

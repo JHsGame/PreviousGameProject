@@ -1,0 +1,189 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+
+public class DeliveryBoxManager_Scr : MonoBehaviour
+{
+    private static DeliveryBoxManager_Scr Instance;
+
+    [SerializeField]
+    private GameObject g_BoxUI;
+    [SerializeField]
+    private GameObject g_BuyPanel;
+
+    private int i_DeliveryLevel = 1;
+    private int i_Count = 3;    // Save_Load에 추가
+    private int i_csvStartNum = -1;
+    private int i_csvEndNum = -1;
+    private float[] f_Weight = new float[6];
+    private float f_totalWeight = 0;
+    private bool b_isFree = true;
+
+    public int DeliveryLevel { get => i_DeliveryLevel; set => i_DeliveryLevel = value; }
+    public int GetBoxCount { get => i_Count; set => i_Count = value; }
+    public bool FreeBox { get => b_isFree; }
+    public GameObject BoxUI { get => g_BoxUI; }
+    public GameObject BoxBuyWindow { get => g_BuyPanel; }
+
+    public static DeliveryBoxManager_Scr instance { get => Instance; }
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            return;
+        }
+    }
+
+    public void readytoDelay()
+    {
+        Invoke("StartingCoroutine", 1f);
+    }
+
+    void StartingCoroutine()
+    {
+        //StartCoroutine(UpdateCoroutine());
+        Init();
+    }
+
+    IEnumerator UpdateCoroutine()
+    {
+        while (true)
+        {
+            yield return CoroutineManager_Scr.WaitForEndOfFrame;
+        }
+    }
+
+    public void Init()
+    {
+        // int형으로 계산할거라 0.1을 1로 계산해주기 위함, 결국 1000의 60%는 600이기 때문에 계산상에는 문제가 없음.
+        if(i_DeliveryLevel == 1)
+        {
+            for (int i = 0; i < 6; ++i)
+            {
+                f_Weight[i] = Convert.ToSingle(Bag_Hero_ItmeCSV.instance.PackageData[i]["Package"]);
+                f_totalWeight += f_Weight[i];
+            }
+        }
+        
+        if(i_DeliveryLevel == 2)
+        {
+            for (int i = 0; i < 6; ++i)
+            {
+                f_Weight[i] = Convert.ToSingle(Bag_Hero_ItmeCSV.instance.PackageData[i]["Present"]);
+                f_totalWeight += f_Weight[i];
+            }
+        }
+
+        if (i_DeliveryLevel == 3)
+        {
+            for (int i = 0; i < 6; ++i)
+            {
+                f_Weight[i] = Convert.ToSingle(Bag_Hero_ItmeCSV.instance.PackageData[i]["Luxury"]);
+                f_totalWeight += f_Weight[i];
+            }
+        }
+    }
+    
+    // 가중치 랜덤 함수. 10000회를 돌렸을 시 결과가 어느정도 잘 나오지만 6티어의 경우 거의 관측되지 않아 코드를 수정할 필요가 있음.
+    public float GetRandom()
+    {
+        System.Random rand = new System.Random();
+
+        float pivot = (float)rand.NextDouble() * f_totalWeight;
+
+        for (int i = 0; i < f_Weight.Length; ++i)
+        {
+            if(pivot < f_Weight[i])
+            {
+                // 해당 티어를 반환할거니까.
+                return i;
+            }
+            else
+            {
+                pivot -= f_Weight[i];
+            }
+        }
+
+        return f_Weight[f_Weight.Length - 1];
+    }
+
+    // 박스를 얻으면 랜덤으로 히어로 혹은 아이템을 받도록 설정
+    // 아이템이나 히어로를 얻을 확률에 대한 정보를 받으면 그에 관한 값을 적용시키고, 지금은 임시로 사용
+    public void GetDeliveryBox()
+    {
+        for(int i = 0; i < 10000; ++i)
+        {
+            print(GetRandom() + 1 + "티어");
+        }
+        float randNum = GetRandom();
+
+        i_csvStartNum = i_csvEndNum = -1;
+
+        // 아이템 항목 중 randNum에서 획득한 티어에 따른 csv에서의 시작~끝 항목 설정.
+        for(int i = 0; i < ItemList_Scr.instance.ItemLists.Count; ++i)
+        {
+            Item item = ItemList_Scr.instance.ItemLists[i];
+
+            if ((randNum + 1) == item.Level)
+            {
+                if(i_csvStartNum == -1)
+                {
+                    i_csvStartNum = i;
+                }
+                i_csvEndNum = i;
+            }
+        }
+        if (i_csvStartNum != i_csvEndNum)
+        {
+            i_csvEndNum++;
+        }
+
+        int randGet = UnityEngine.Random.Range(0, 101);
+
+        // 무료 사용
+        if (i_Count > 0)
+        {
+            i_Count--;
+            // 캐릭터 획득 및 아이템 획득
+            if(randGet <= 50)
+            {
+                Inventory_Scr.instance.GetItem(i_csvStartNum, i_csvEndNum);
+            }
+            else
+            {
+                // 캐릭터 획득
+                Inventory_Scr.instance.GetHero();
+            }
+        }
+        else
+        {
+            // 택배를 얻을 때 보석을 사용하도록 설정
+            b_isFree = false;
+
+            // 보석개수랑 현재 인벤토리가 꽉 차있는지 여부를 확인하면서 받아옵시다.
+            if (randGet <= 50 && !Inventory_Scr.instance.InventoryFull)
+            {
+                Inventory_Scr.instance.GetItem(i_csvStartNum, i_csvEndNum);
+            }
+            else
+            {
+                // 캐릭터 획득
+                Inventory_Scr.instance.GetHero();
+            }
+        }
+
+        Save_Load.instance.Save();
+    }
+
+    public void ResetCount()
+    {
+        i_Count = 3;
+        g_BuyPanel.SetActive(false);
+    }
+}

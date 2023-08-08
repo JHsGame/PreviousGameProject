@@ -1,0 +1,40 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class ApplicationState_Scr : MonoBehaviour
+{
+    public static bool b_isPause;
+
+    void Start()
+    {
+        DontDestroyOnLoad(this.gameObject);
+        QualitySettings.vSyncCount = 0;
+
+        Application.targetFrameRate = 60;
+    }
+
+    private void OnApplicationPause(bool pause)
+    {
+        if (pause)
+            b_isPause = false;
+        else
+        {
+            if (b_isPause)
+                b_isPause = false;
+        }
+
+        if (b_isPause)
+        {
+            // 정지 상태
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        if (ChatManager_Scr.Instance != null && ChatManager_Scr.Instance.chatClient != null)
+        {
+            ChatManager_Scr.Instance.chatClient.Disconnect();
+        }
+    }
+}

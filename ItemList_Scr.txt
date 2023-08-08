@@ -1,0 +1,79 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class ItemList_Scr : MonoBehaviour
+{
+    private static ItemList_Scr Instance;
+    private List<Item> items = new List<Item>();
+
+    public static ItemList_Scr instance { get => Instance; }
+    public List<Item> ItemLists { get => items; }
+
+    private void Awake()
+    {
+        if(Instance != null)
+        {
+            return;
+        }
+        else
+        {
+            Instance = this;
+        }
+    }
+
+    public void readytoDelay()
+    {
+        Invoke("LoadCSV", 0.01f);
+    }
+
+    void LoadCSV()
+    {
+        for (int i = 0; i < Bag_Hero_ItmeCSV.instance.ItemData.Count; ++i) {
+            string levelTmp = Bag_Hero_ItmeCSV.instance.ItemData[i]["Tier"].ToString().Substring(0, 1);
+            int level = int.Parse(levelTmp);
+            string name = Bag_Hero_ItmeCSV.instance.ItemData[i]["Korean"].ToString();
+            float hp = Convert.ToSingle(Bag_Hero_ItmeCSV.instance.ItemData[i]["HP"]);
+            float heal = Convert.ToSingle(Bag_Hero_ItmeCSV.instance.ItemData[i]["Heal"]);
+            float speed = Convert.ToSingle(Bag_Hero_ItmeCSV.instance.ItemData[i]["Speed"]);
+            float ability = Convert.ToSingle(Bag_Hero_ItmeCSV.instance.ItemData[i]["Ability"]);
+            float critical = Convert.ToSingle(Bag_Hero_ItmeCSV.instance.ItemData[i]["Critical"]);
+            float attack = Convert.ToSingle(Bag_Hero_ItmeCSV.instance.ItemData[i]["Attack"]);
+
+            List<string> tmp = new List<string>();
+
+            if(hp > 0)
+            {
+                tmp.Add("HP");
+            }
+
+            if (heal > 0)
+            {
+                tmp.Add("Heal");
+            }
+
+            if (attack > 0)
+            {
+                tmp.Add("Attack");
+            }
+
+            if (speed > 0)
+            {
+                tmp.Add("Speed");
+            }
+
+            if (ability > 0)
+            {
+                tmp.Add("Ability");
+            }
+
+            if (critical > 0)
+            {
+                tmp.Add("Critical");
+            }
+
+            items.Add(new Item(tmp, name, level, hp, heal, attack, speed, ability, critical));
+        }
+    }
+}

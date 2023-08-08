@@ -1,0 +1,307 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class CharChangerStat_Scr : MonoBehaviour
+{
+    public GameObject g_Loot;   // 최상위그룹. 선택되면 색깔을 바꾸기 위함.
+    public GameObject g_Body;
+    public GameObject g_NameText;
+    public GameObject g_BuyPanel;
+    public GameObject g_Ability;
+    public GameObject g_Button;
+    public GameObject g_BoughtButton;
+    public GameObject g_UpgradeButton;
+
+    public Transform t_Parent;  // 부모 위치 잡기
+
+    [Header("Value")]
+    public string s_Name;
+    public string s_CSVName;
+    public string s_Ability;
+    public int i_Type;
+    public int i_Money;
+    public bool b_isBought;
+    public bool b_isSelected;
+
+    public Image i_Profile;
+    public Sprite s_Profile;
+    public Sprite[] s_bodyImage;
+    public Sprite[] s_buttonImage;
+
+    public int i_nowUpgradeSteps = 0; // 0번부터 총무, 지원, 인사, 홍보, 영업팀
+    public TextAsset myTxt;
+    public List<Dictionary<string, object>> PlayerUpgradeData;
+
+
+
+    int FontMaterialNum = 0;
+
+    private void Awake()
+    {
+        PlayerUpgradeData = CSVReader.Read(myTxt);
+    }
+    private void Start()
+    {
+        i_Type = transform.GetSiblingIndex() + 1;
+    }
+
+    void Update()
+    {
+        if (b_isSelected)
+        {
+            g_Ability.GetComponent<TextMeshProUGUI>().color = new Color(0f / 255f, 0f / 255f, 0f / 255f, 255f / 255f);
+            g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>().color = new Color(0f / 255f, 0f / 255f, 0f / 255f, 255f / 255f);
+        }
+        else
+        {
+            g_Ability.GetComponent<TextMeshProUGUI>().color = new Color(255f / 255f, 255f / 255f, 255f / 255f, 255f / 255f);
+            g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>().color = new Color(255f / 255f, 255f / 255f, 255f / 255f, 255f / 255f);
+        }
+
+        // 나라별 능력치 위치 조절
+        if (g_Ability.activeSelf)
+        {
+            if (TranslateManager_Scr.instance.b_isFrance)
+            {
+                g_Ability.GetComponent<RectTransform>().sizeDelta = new Vector2(210f, 50f);
+            }
+            else if (TranslateManager_Scr.instance.b_isJapanese)
+            {
+                g_Ability.GetComponent<RectTransform>().anchoredPosition = new Vector2(55f, -3f);
+                g_Ability.GetComponent<RectTransform>().sizeDelta = new Vector2(220f, 50f);
+            }
+            else
+            {
+                g_Ability.GetComponent<RectTransform>().anchoredPosition = new Vector2(30f, -3f);
+                g_Ability.GetComponent<RectTransform>().sizeDelta = new Vector2(270f, 50f);
+            }
+        }
+
+        g_NameText.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = s_Name;
+
+        if (i_Type == 1)
+        {
+            g_Ability.GetComponent<TextMeshProUGUI>().text = s_Ability;    // 캐릭터 능력
+        }
+        else
+        {
+            g_Ability.GetComponent<TextMeshProUGUI>().text = s_Ability + PlayerUpgradeData[i_nowUpgradeSteps][s_CSVName].ToString() + "%";    // 캐릭터 능력
+        }
+        if (i_Type == 1)
+        {
+            g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = s_Ability;     // 캐릭터 능력
+        }
+        else if(i_Type == 2)
+        {
+            if (TranslateManager_Scr.instance.b_isEnglish)
+            {
+                g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = s_Ability.Substring(0, 4) + "\n" + s_Ability.Substring(5, 13) + PlayerUpgradeData[i_nowUpgradeSteps][s_CSVName].ToString() + "%";      // 캐릭터 능력
+            }
+            else if (TranslateManager_Scr.instance.b_isJapanese)
+            {
+                g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = s_Ability + PlayerUpgradeData[i_nowUpgradeSteps][s_CSVName].ToString() + "%";      // 캐릭터 능력
+            }
+            else
+            {
+                g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = s_Ability + PlayerUpgradeData[i_nowUpgradeSteps][s_CSVName].ToString() + "%";      // 캐릭터 능력
+
+            }
+        }
+        else if(i_Type == 5)
+        {
+            if (TranslateManager_Scr.instance.b_isJapanese)
+            {
+                g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = s_Ability + PlayerUpgradeData[i_nowUpgradeSteps][s_CSVName].ToString() + "%";      // 캐릭터 능력
+            }
+            else
+            {
+                g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = s_Ability + PlayerUpgradeData[i_nowUpgradeSteps][s_CSVName].ToString() + "%";      // 캐릭터 능력
+            }
+        }
+        else
+        {
+            g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = s_Ability + PlayerUpgradeData[i_nowUpgradeSteps][s_CSVName].ToString() + "%";      // 캐릭터 능력
+        }
+        i_Money = (int)PlayerUpgradeData[i_nowUpgradeSteps]["NeedGem"];
+        g_BuyPanel.transform.GetChild(2).GetComponent<Text>().text = i_Money.ToString();    // 캐릭터 가격
+        i_Profile.sprite = s_Profile;
+
+
+        TranslateManager_Scr.instance.ChangeFont(g_BoughtButton.transform.GetChild(0).GetComponent<Text>());
+        TranslateManager_Scr.instance.ChangeFont(g_UpgradeButton.transform.GetChild(0).GetComponent<Text>());
+
+        TranslateManager_Scr.instance.ChangeFont(g_NameText.transform.GetChild(0).GetComponent<TextMeshProUGUI>(), TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFontMaterial(g_NameText.transform.GetChild(0).GetComponent<TextMeshProUGUI>(), TranslateManager_Scr.instance.i_TMPNum + 6);
+
+        TranslateManager_Scr.instance.ChangeFont(g_Ability.GetComponent<TextMeshProUGUI>(), TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFont(g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>(), TranslateManager_Scr.instance.i_TMPNum);
+
+        if (b_isSelected)
+        {
+            FontMaterialNum = 0;
+        }
+        else
+        {
+            FontMaterialNum = 3;
+        }
+
+        TranslateManager_Scr.instance.ChangeFontMaterial(g_Ability.GetComponent<TextMeshProUGUI>(), TranslateManager_Scr.instance.i_TMPNum + FontMaterialNum);
+        TranslateManager_Scr.instance.ChangeFontMaterial(g_BuyPanel.transform.GetChild(1).GetComponent<TextMeshProUGUI>(), TranslateManager_Scr.instance.i_TMPNum + FontMaterialNum);
+        BoolCheck();
+    }
+
+
+    public void UpgradeCharacter()
+    {
+        if(GoldManager_Scr.instance.i_Gem >= (int)PlayerUpgradeData[i_nowUpgradeSteps]["NeedGem"])
+        {
+            SuccessUpgrade();
+        }
+        else
+        {
+            FailUpgrade();
+        }
+    }
+
+    void SuccessUpgrade()
+    {
+        SoundManager_sfx.instance.PlaySE("Reinforcement", false);
+        GoldManager_Scr.instance.i_Gem -= (int)PlayerUpgradeData[i_nowUpgradeSteps]["NeedGem"];
+        i_nowUpgradeSteps++;
+    }
+
+    void FailUpgrade()
+    {
+        FailedPurchaseManager_Scr.instance.b_isCoin = false;
+        SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+        FailedPurchaseManager_Scr.instance.OnFailedOn();
+    }
+
+    public void BoolCheck()
+    {
+        if(i_Type != 1)
+        {
+            if (b_isBought)
+            {
+                g_Body.SetActive(true);
+                g_Ability.SetActive(true);
+                g_Button.SetActive(false);
+                g_BoughtButton.SetActive(false);
+                g_UpgradeButton.SetActive(true);
+                if (i_nowUpgradeSteps < 15)
+                {
+                    g_Ability.SetActive(false);
+                    if (TranslateManager_Scr.instance.b_isEnglish || TranslateManager_Scr.instance.b_isIndia || TranslateManager_Scr.instance.b_isItalia || TranslateManager_Scr.instance.b_isGermany)
+                    {
+                        g_UpgradeButton.transform.GetChild(0).GetComponent<Text>().text = TranslateManager_Scr.instance.TranslateData[20]["English"].ToString();
+                    }
+                    else
+                        g_UpgradeButton.transform.GetChild(0).GetComponent<Text>().text = TranslateManager_Scr.instance.TranslateData[20][TranslateManager_Scr.instance.s_Language].ToString();
+                }
+                else
+                {
+                    g_Ability.SetActive(true);
+                    g_UpgradeButton.transform.GetComponent<Button>().enabled = false;
+                    g_UpgradeButton.transform.GetChild(0).GetComponent<Text>().text = "MAX";
+                }
+            }
+            else
+            {
+                g_UpgradeButton.SetActive(false);
+                g_Ability.SetActive(false);
+                g_Body.SetActive(false);
+                g_Button.SetActive(true);
+                g_BoughtButton.SetActive(false);
+            }
+
+            if (i_nowUpgradeSteps >= 15)
+            {
+                g_BuyPanel.SetActive(false);
+            }
+            else
+            {
+                g_BuyPanel.SetActive(true);
+            }
+        }
+        else
+        {
+            if (b_isBought)
+            {
+                g_Body.SetActive(true);
+                g_Ability.SetActive(true);
+                g_Button.SetActive(false);
+                g_BoughtButton.SetActive(true);
+                g_BuyPanel.SetActive(false);
+                g_UpgradeButton.SetActive(false);
+            }
+            else
+            {
+                g_UpgradeButton.SetActive(false);
+                g_Ability.SetActive(false);
+                g_Body.SetActive(false);
+                g_Button.SetActive(true);
+                g_BoughtButton.SetActive(false);
+            }
+        }
+
+        if (b_isSelected)
+        {
+            g_Loot.GetComponent<Image>().sprite = s_bodyImage[1];
+        }
+        else
+        {
+            g_Loot.GetComponent<Image>().sprite = s_bodyImage[0];
+        }
+    }
+
+
+    public void OnClickBuy()
+    {
+        if (GoldManager_Scr.instance.i_Gem >= i_Money)
+        {
+            SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+            i_nowUpgradeSteps++;
+            GoldManager_Scr.instance.i_Gem -= i_Money;
+            b_isBought = true;
+            Save_Load.instance.Save();
+        }
+        else
+        {
+            SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+            FailedPurchaseManager_Scr.instance.b_isCoin = false;
+            FailedPurchaseManager_Scr.instance.OnFailedOn();
+        }
+    }
+
+    public void OnClickChange()
+    {
+        if (b_isBought)
+        {
+            if (ChangeManager_Scr.instance.i_CharType != 3 && i_Type == 3)
+            {
+                HPManager_Scr.instance.f_Hp += (int)((int)HPManager_Scr.instance.HpData[ManPowerManager_Scr.instance.i_Level - 1]["HP"] * 0.05f);
+            }
+            else if(ChangeManager_Scr.instance.i_CharType == 3 && i_Type != 3)
+            {
+                HPManager_Scr.instance.f_Hp -= (int)((int)HPManager_Scr.instance.HpData[ManPowerManager_Scr.instance.i_Level - 1]["HP"] * 0.05f);
+            }
+
+            ChangeManager_Scr.instance.i_CharType = i_Type;
+
+            // 활성화하는 번호에 따라 캐릭도 활성화
+            Player_Input.instance.ActiveCharater(i_Type-1);
+            int tmp = transform.GetSiblingIndex();
+            for (int i = 0; i < t_Parent.childCount; ++i)
+            {
+                if (tmp == i)
+                    t_Parent.GetChild(i).GetComponent<CharChangerStat_Scr>().b_isSelected = true;
+                else
+                    t_Parent.GetChild(i).GetComponent<CharChangerStat_Scr>().b_isSelected = false;
+            }
+        }
+    }
+}

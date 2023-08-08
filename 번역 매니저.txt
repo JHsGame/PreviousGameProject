@@ -1,0 +1,1339 @@
+using System.Collections;
+using System.Globalization;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class TranslateManager_Scr : MonoBehaviour
+{
+    public enum UIFont { Maple, Roboto, NanumBarunGothic }
+    public static TranslateManager_Scr instance;
+    RegionInfo curCountry;  // 국가 정보
+
+    public TextAsset myTxt;
+    public List<Dictionary<string, object>> TranslateData;
+
+    public Button_Option g_Lobby;
+    public GameObject newVersionAvailable; // 버전확인 UI
+    public Transform t_BeforeTranslateParent;
+    public Transform t_AfterTranslateParent;
+    public Text t_ADPremium;
+
+    public Image i_Title;
+    public Sprite[] s_Title;
+
+    public GameObject[] g_BeforeButtons;
+    public GameObject[] g_AfterButtons;
+    public GameObject g_BeforeDropDown;
+    public GameObject g_AfterDropDown;
+    public Text[] g_Review;
+
+    public bool b_isKorean = true;
+    public bool b_isEnglish = false;
+    public bool b_isJapanese = false;
+    public bool b_isChinese = false;
+    public bool b_isIndia = false;
+    public bool b_isVietnam = false;
+    public bool b_isFrance = false;
+    public bool b_isGermany = false;
+    public bool b_isItalia = false;
+
+
+    public int i_LanguageValue;
+    public int i_LanguageIdx;
+    public int i_TMPNum = 0;
+    public string s_Language = "";
+
+    public Font[] f_Font = new Font[3];
+    public TMP_FontAsset[] f_TMPFont = new TMP_FontAsset[6];
+    public Material[] f_TMPMaterial = new Material[9];
+
+    int Idx = 0;
+    string str;
+    string[] split;
+
+    SystemLanguage language;
+    public UIFont myFont;
+
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+
+            TranslateData = CSVReader.Read(myTxt);
+        }
+        else
+            return;
+    }
+    private void Start()
+    {
+        // 휴대폰 기기가 사용하는 언어 정보를 가져와서 해당 언어로 번역해서 시작하도록 설정
+        language = Application.systemLanguage;
+        switch (language)
+        {
+            case SystemLanguage.Afrikaans:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Arabic:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Basque:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Belarusian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Bulgarian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Catalan:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Chinese:
+                s_Language = "Chinese";
+                break;
+            case SystemLanguage.Czech:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Danish:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Dutch:
+                s_Language = "English";
+                break;
+            case SystemLanguage.English:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Estonian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Faroese:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Finnish:
+                s_Language = "English";
+                break;
+            case SystemLanguage.French:
+                s_Language = "France";
+                break;
+            case SystemLanguage.German:
+                s_Language = "Germany";
+                break;
+            case SystemLanguage.Greek:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Hebrew:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Hungarian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Icelandic:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Indonesian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Italian:
+                s_Language = "Italia";
+                break;
+            case SystemLanguage.Japanese:
+                s_Language = "Japanese";
+                break;
+            case SystemLanguage.Korean:
+                s_Language = "Korean";
+                break;
+            case SystemLanguage.Latvian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Lithuanian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Norwegian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Polish:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Portuguese:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Romanian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Russian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.SerboCroatian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Slovak:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Slovenian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Spanish:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Swedish:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Thai:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Turkish:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Ukrainian:
+                s_Language = "English";
+                break;
+            case SystemLanguage.Vietnamese:
+                s_Language = "Vietnam";
+                break;
+            case SystemLanguage.ChineseSimplified:
+                s_Language = "Chinese";
+                break;
+            case SystemLanguage.ChineseTraditional:
+                s_Language = "Chinese";
+                break;
+            case SystemLanguage.Unknown:
+                s_Language = "English";
+                break;
+            default:
+                break;
+        }
+
+        TitleImage(s_Language);
+
+        if (s_Language == "Korean")
+            i_LanguageValue = 0;
+        else if (curCountry.Name != "Indian" && s_Language == "English")
+            i_LanguageValue = 1;
+        else if (s_Language == "Japanese")
+            i_LanguageValue = 2;
+        else if (s_Language == "Chinese")
+            i_LanguageValue = 3;
+        else if (curCountry.Name == "Indian")
+            i_LanguageValue = 4;
+        else if (curCountry.Name == "Vietnam")
+            i_LanguageValue = 5;
+        else if (curCountry.Name == "France")
+            i_LanguageValue = 6;
+        else if (curCountry.Name == "Germany")
+            i_LanguageValue = 7;
+        else if (curCountry.Name == "Italia")
+            i_LanguageValue = 8;
+
+        OnCheckImage(i_LanguageValue);
+
+        TranslateLanguage();
+
+        StageManager_Scr.instance.StageNameChecker();
+
+        Invoke("unactive", 0.1f);
+    }
+
+    public void DetectCountry()
+    {
+        curCountry = RegionInfo.CurrentRegion;
+        if (curCountry.Name == "IN")
+            b_isIndia = true;
+    }
+
+    public void TitleImage(string str)
+    {
+        if (str == "Korean")
+        {
+            i_Title.sprite = s_Title[0];
+        }
+        else
+            i_Title.sprite = s_Title[1];
+    }
+
+    void unactive()
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            g_BeforeButtons[i].transform.GetChild(1).gameObject.SetActive(false);
+            g_AfterButtons[i].transform.GetChild(1).gameObject.SetActive(false);
+        }
+    }
+
+    private void Update()
+    {
+        AttendanceManager_Scr.instance.g_DontSeeObj.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
+        switch (s_Language)
+        {
+            case "Korean":
+                g_BeforeButtons[0].transform.GetChild(1).gameObject.SetActive(true);
+                g_AfterButtons[0].transform.GetChild(1).gameObject.SetActive(true);
+                break;
+
+            case "English":
+
+                AttendanceManager_Scr.instance.g_DontSeeObj.GetComponent<RectTransform>().anchoredPosition = new Vector3(100, 0, 0);
+                g_BeforeButtons[1].transform.GetChild(1).gameObject.SetActive(true);
+                g_AfterButtons[1].transform.GetChild(1).gameObject.SetActive(true);
+                break;
+
+            case "Japanese":
+
+                g_BeforeButtons[2].transform.GetChild(1).gameObject.SetActive(true);
+                g_AfterButtons[2].transform.GetChild(1).gameObject.SetActive(true);
+                break;
+
+            case "Chinese":
+
+                g_BeforeButtons[3].transform.GetChild(1).gameObject.SetActive(true);
+                g_AfterButtons[3].transform.GetChild(1).gameObject.SetActive(true);
+                break;
+        }
+    }
+
+    public void OnCheckImage(int _value)
+    {
+        if (Save_Load.instance.b_isLoad)
+            SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+
+        i_LanguageValue = _value;
+        g_BeforeDropDown.GetComponent<Dropdown>().value = i_LanguageValue;
+        g_AfterDropDown.GetComponent<Dropdown>().value = i_LanguageValue;
+
+        if(i_LanguageValue == 2 || i_LanguageValue == 3)
+        {
+            ChangeFont(g_BeforeDropDown.GetComponent<Dropdown>().captionText);
+            ChangeFont(g_AfterDropDown.GetComponent<Dropdown>().captionText);
+        }
+        else
+        {
+            ChangeFont(g_BeforeDropDown.GetComponent<Dropdown>().captionText);
+            ChangeFont(g_AfterDropDown.GetComponent<Dropdown>().captionText);
+        }
+    }
+
+    public void OnClickDropDownMenu()
+    {
+        Invoke("DropDownMenuActive", 2f);
+    }
+
+    public void OnCheckImage(GameObject obj)
+    {
+        if(Save_Load.instance.b_isLoad)
+            SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+        
+        for (int i = 0; i < obj.transform.parent.childCount; ++i)
+        {
+            obj.transform.parent.GetChild(i).GetChild(1).gameObject.SetActive(false);
+        }
+        i_LanguageIdx = obj.transform.GetSiblingIndex();
+    }
+
+    public void OnTranslateLanguage(string _language)
+    {
+        s_Language = _language;
+        TranslateLanguage();
+        TitleImage(s_Language);
+        g_Lobby.TranslateUI();
+    }
+
+    public void ChangeLanguage(Dropdown box)
+    {
+        b_isIndia = false;
+        OnCheckImage(box.value);
+        switch (i_LanguageValue)
+        {
+            case 0:
+                s_Language = "Korean";
+                break;
+            case 1:
+                s_Language = "English";
+                break;
+            case 2:
+                s_Language = "Japanese";
+                break;
+            case 3:
+                s_Language = "Chinese";
+                break;
+            case 4:
+                s_Language = "English";
+                b_isIndia = true;
+                break;
+            case 5:
+                s_Language = "Vietnam";
+                break;
+            case 6:
+                s_Language = "France";
+                break;
+            case 7:
+                s_Language = "Germany";
+                break;
+            case 8:
+                s_Language = "Italia";
+                break;
+            default:
+                break;
+        }
+        TranslateLanguage();
+        TitleImage(s_Language);
+    }
+
+    public void TranslateLanguage()
+    {
+        myFont = UIFont.NanumBarunGothic;
+        switch (s_Language)
+        {
+            case "Korean":
+                i_TMPNum = 0;
+                b_isKorean = true;
+                b_isEnglish = false;
+                b_isJapanese = false;
+                b_isChinese = false;
+                b_isIndia = false;
+                b_isVietnam = false;
+                b_isFrance = false;
+                b_isGermany = false;
+                b_isItalia = false;
+                break;
+
+            case "English":
+                i_TMPNum = 0;
+                b_isKorean = false;
+                b_isEnglish = true;
+                b_isJapanese = false;
+                b_isChinese = false;
+                b_isIndia = false;
+                b_isVietnam = false;
+                b_isFrance = false;
+                b_isGermany = false;
+                b_isItalia = false;
+                break;
+
+            case "Japanese":
+                i_TMPNum = 1;
+                b_isKorean = false;
+                b_isEnglish = false;
+                b_isJapanese = true;
+                b_isChinese = false;
+                b_isIndia = false;
+                b_isVietnam = false;
+                b_isFrance = false;
+                b_isGermany = false;
+                b_isItalia = false;
+                break;
+
+            case "Chinese":
+                i_TMPNum = 2;
+                b_isKorean = false;
+                b_isEnglish = false;
+                b_isJapanese = false;
+                b_isChinese = true;
+                b_isIndia = false;
+                b_isVietnam = false;
+                b_isFrance = false;
+                b_isGermany = false;
+                b_isItalia = false;
+                break;
+
+            case "India":
+                i_TMPNum = 0;
+                b_isKorean = false;
+                b_isEnglish = false;
+                b_isJapanese = false;
+                b_isChinese = false;
+                b_isIndia = true;
+                b_isVietnam = false;
+                b_isFrance = false;
+                b_isGermany = false;
+                b_isItalia = false;
+                break;
+
+            case "Vietnam":
+                i_TMPNum = 0;
+                b_isKorean = false;
+                b_isEnglish = false;
+                b_isJapanese = false;
+                b_isChinese = false;
+                b_isIndia = false;
+                b_isVietnam = true;
+                b_isFrance = false;
+                b_isGermany = false;
+                b_isItalia = false;
+                break;
+
+            case "France":
+                i_TMPNum = 0;
+                b_isKorean = false;
+                b_isEnglish = false;
+                b_isJapanese = false;
+                b_isChinese = false;
+                b_isIndia = false;
+                b_isVietnam = false;
+                b_isFrance = true;
+                b_isGermany = false;
+                b_isItalia = false;
+                break;
+
+            case "Germany":
+                i_TMPNum = 0;
+                b_isKorean = false;
+                b_isEnglish = false;
+                b_isJapanese = false;
+                b_isChinese = false;
+                b_isIndia = false;
+                b_isVietnam = false;
+                b_isFrance = false;
+                b_isGermany = true;
+                b_isItalia = false;
+                break;
+
+            case "Italia":
+                i_TMPNum = 0;
+                b_isKorean = false;
+                b_isEnglish = false;
+                b_isJapanese = false;
+                b_isChinese = false;
+                b_isIndia = false;
+                b_isVietnam = false;
+                b_isFrance = false;
+                b_isGermany = false;
+                b_isItalia = true;
+                break;
+        }
+
+        #region 폰트 변경
+        ChangeFont(RewardManager_Scr.instance.G_Lose.transform.GetChild(1).GetChild(0).GetChild(2).GetChild(0).GetComponent<Text>());
+        ChangeFont(TutorialManager.instance.go_TutorialRankGroup.transform.GetChild(1).GetComponent<Text>());
+        ChangeFont(TutorialManager.instance.go_TutorialRankGroup.transform.GetChild(2).GetComponent<Text>());
+        ChangeFont(TutorialManager.instance.go_TutorialRankGroup.transform.GetChild(3).GetComponent<Text>());
+        ChangeFont(TutorialManager.instance.go_TutorialRankGroup.transform.GetChild(4).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Before.transform.GetChild(3).GetComponent<Text>());
+        ChangeFont(g_Lobby.g_RankButton.transform.GetChild(0).GetComponent<TextMeshProUGUI>(), i_TMPNum);
+        ChangeFont(g_Lobby.g_DownSideGroup.transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>(), i_TMPNum);
+        ChangeFont(g_Lobby.g_DownSideGroup.transform.GetChild(1).GetChild(0).GetComponent<TextMeshProUGUI>(), i_TMPNum);
+        ChangeFont(g_Lobby.g_DownSideGroup.transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>(), i_TMPNum);
+        ChangeFont(g_Lobby.g_DownSideGroup.transform.GetChild(3).GetChild(0).GetComponent<TextMeshProUGUI>(), i_TMPNum);
+        ChangeFont(g_Lobby.G_CoinShop.transform.GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_CoinShop.transform.GetChild(4).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_GemShop.transform.GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_GemShop.transform.GetChild(4).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Skill.transform.GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Skill.transform.GetChild(5).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Skill.transform.GetChild(6).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Skill.transform.GetChild(4).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_ManPower.transform.GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_ManPower.transform.GetChild(5).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_VendingMachine.transform.GetChild(4).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_VendingMachine.transform.GetChild(6).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(2).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(5).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(6).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(4).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(5).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(6).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Shop.transform.GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Shop.transform.GetChild(5).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_CharacterShop.transform.GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_CharacterShop.transform.GetChild(5).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.Before_Option.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.Before_Option.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.Before_Option.transform.GetChild(1).GetChild(3).GetChild(2).GetComponent<Text>());
+        ChangeFont(g_Lobby.Before_Option.transform.GetChild(1).GetChild(4).GetChild(2).GetComponent<Text>());
+        ChangeFont(g_Lobby.Before_Option.transform.GetChild(1).GetChild(5).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.After_Pause.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.After_Pause.transform.GetChild(1).GetChild(2).GetChild(2).GetComponent<Text>());
+        ChangeFont(g_Lobby.After_Pause.transform.GetChild(1).GetChild(3).GetChild(2).GetComponent<Text>());
+        ChangeFont(g_Lobby.After_Pause.transform.GetChild(1).GetChild(4).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.After_Pause.transform.GetChild(1).GetChild(5).GetChild(0).GetComponent<Text>());
+
+        ChangeFont(g_Lobby.G_Home.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Home.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Home.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>());
+        ChangeFont(RewardManager_Scr.instance.g_CurLevelClear.transform.GetChild(0).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_LevelUp.transform.GetChild(2).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>());
+        ChangeFont(QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Text>());
+        ChangeFont(QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>());
+        ChangeFont(QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>());
+        ChangeFont(QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Attendance.transform.GetChild(2).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Attendance.transform.GetChild(2).GetChild(0).GetChild(1).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Attendance.transform.GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Mission.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Mission.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>());
+        ChangeFont(MissionManager_Scr.instance.G_MissionList[3].GetComponent<MissionSlot_Scr>().t_Context, i_TMPNum);
+        ChangeFont(MissionManager_Scr.instance.G_MissionList[3].GetComponent<MissionSlot_Scr>().g_Clear.transform.GetChild(0).GetComponent<Text>());
+        ChangeFont(ShopManager_Scr.instance.g_ChangeWindow.transform.GetChild(5).GetChild(0).GetChild(0).GetComponent<Text>());
+        ChangeFont(ShopManager_Scr.instance.g_ChangeWindow.transform.GetChild(6).GetChild(0).GetComponent<Text>());
+        ChangeFont(t_ADPremium);
+        ChangeFont(g_Lobby.G_Stage.transform.GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Stage.transform.GetChild(4).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Stage.transform.GetChild(5).GetChild(0).GetChild(1).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Stage.transform.GetChild(5).GetChild(0).GetChild(2).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.G_Stage.transform.GetChild(5).GetChild(0).GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(g_Lobby.g_StageBG.transform.GetChild(1).GetComponent<Text>());
+        ChangeFont(RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(1).GetChild(0).GetChild(0).GetComponent<Text>());
+        ChangeFont(RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>());
+        ChangeFont(RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>());
+        ChangeFont(RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(2).GetChild(0).GetChild(0).GetComponent<Text>());
+        ChangeFont(RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetComponent<Text>());
+        ChangeFont(RewardManager_Scr.instance.G_Lose.transform.GetChild(1).GetChild(0).GetChild(3).GetChild(0).GetComponent<Text>());
+        ChangeFont(RewardManager_Scr.instance.G_Lose.transform.GetChild(1).GetChild(0).GetChild(4).GetChild(0).GetComponent<Text>());
+        #endregion
+
+        for (int i = 0; i < RespawnManager.instance.ActiveBlock.Count; i++)
+        {
+            if (b_isIndia)
+                RespawnManager.instance.ActiveBlock[i].transform.GetComponent<BlockControl>().setName(s_Language, "Indian");
+            else
+                RespawnManager.instance.ActiveBlock[i].transform.GetComponent<BlockControl>().setName(s_Language, s_Language);
+        }
+
+        #region 확인버튼
+
+        if (b_isEnglish || b_isIndia || b_isItalia || b_isGermany || b_isFrance || b_isVietnam)
+        {
+            TutorialManager.instance.go_TutorialRankGroup.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.G_CoinShop.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.G_GemShop.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.G_Skill.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.G_ManPower.transform.GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.G_VendingMachine.transform.GetChild(6).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.G_Shop.transform.GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.G_CharacterShop.transform.GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.Before_Option.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.After_Pause.transform.GetChild(1).GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.G_Attendance.transform.GetChild(2).GetChild(0).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.G_Mission.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            g_Lobby.G_Stage.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            RewardManager_Scr.instance.G_Lose.transform.GetChild(1).GetChild(0).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+            if (TutorialManager.instance.go_TutorialGroup != null)
+            {
+                TutorialManager.instance.go_TutorialGroup.transform.GetChild(9).GetChild(0).GetComponent<Text>().text = TranslateData[6]["English"].ToString();
+                ChangeFont(TutorialManager.instance.go_TutorialGroup.transform.GetChild(9).GetChild(0).GetComponent<Text>());
+            }
+        }
+        else
+        {
+            TutorialManager.instance.go_TutorialRankGroup.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.G_CoinShop.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.G_GemShop.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.G_Skill.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.G_ManPower.transform.GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.G_VendingMachine.transform.GetChild(6).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.G_Shop.transform.GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.G_CharacterShop.transform.GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.Before_Option.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.After_Pause.transform.GetChild(1).GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.G_Attendance.transform.GetChild(2).GetChild(0).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.G_Mission.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            g_Lobby.G_Stage.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            RewardManager_Scr.instance.G_Lose.transform.GetChild(1).GetChild(0).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+            if (TutorialManager.instance.go_TutorialGroup != null)
+            {
+                TutorialManager.instance.go_TutorialGroup.transform.GetChild(9).GetChild(0).GetComponent<Text>().text = TranslateData[6][s_Language].ToString();
+                ChangeFont(TutorialManager.instance.go_TutorialGroup.transform.GetChild(9).GetChild(0).GetComponent<Text>());
+            }
+
+        }
+        #endregion
+
+        #region 튜토리얼 - 랭킹전
+        if (b_isEnglish || b_isIndia || b_isItalia || b_isGermany || b_isFrance || b_isVietnam)
+        {
+            TutorialManager.instance.go_TutorialRankGroup.transform.GetChild(1).GetComponent<Text>().text = TranslateData[5]["English"].ToString();
+        }
+        else
+        {
+            TutorialManager.instance.go_TutorialRankGroup.transform.GetChild(1).GetComponent<Text>().text = TranslateData[5][s_Language].ToString();
+        }
+        TutorialManager.instance.go_TutorialRankGroup.transform.GetChild(2).GetComponent<Text>().text = TranslateData[144][s_Language] + "\n" + TranslateData[145][s_Language].ToString();
+        TutorialManager.instance.go_TutorialRankGroup.transform.GetChild(3).GetComponent<Text>().text = TranslateData[146][s_Language] + "\n" + TranslateData[147][s_Language].ToString();
+        #endregion
+
+        #region 로비 버튼들
+        if (b_isEnglish || b_isIndia || b_isItalia || b_isGermany || b_isFrance || b_isVietnam)
+        {
+            g_Lobby.G_Before.transform.GetChild(3).GetComponent<Text>().text = TranslateData[0]["English"].ToString();
+            g_Lobby.G_Before.transform.GetChild(6).transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[1]["English"].ToString(); // 로비 위쪽 레이아웃 그룹의 랭킹
+            g_Lobby.G_Before.transform.GetChild(6).transform.GetChild(1).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[2]["English"].ToString();
+            g_Lobby.G_Before.transform.GetChild(6).transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[3]["English"].ToString();
+            g_Lobby.G_Before.transform.GetChild(6).transform.GetChild(3).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[4]["English"].ToString();
+
+
+            g_Lobby.g_RankButton.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[5]["English"].ToString();   // 로비의 랭킹전 버튼
+
+            g_Lobby.g_DownSideGroup.transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[8]["English"].ToString();    // 로비 아래쪽 레이아웃 그룹의 스킬
+            g_Lobby.g_DownSideGroup.transform.GetChild(1).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[9]["English"].ToString();
+            g_Lobby.g_DownSideGroup.transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[10]["English"].ToString();
+            g_Lobby.g_DownSideGroup.transform.GetChild(3).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[11]["English"].ToString();
+        }
+        else
+        {
+            g_Lobby.G_Before.transform.GetChild(3).GetComponent<Text>().text = TranslateData[0][s_Language].ToString();
+            g_Lobby.G_Before.transform.GetChild(6).transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[1][s_Language].ToString(); // 로비 위쪽 레이아웃 그룹의 랭킹
+            g_Lobby.G_Before.transform.GetChild(6).transform.GetChild(1).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[2][s_Language].ToString();
+            g_Lobby.G_Before.transform.GetChild(6).transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[3][s_Language].ToString();
+            g_Lobby.G_Before.transform.GetChild(6).transform.GetChild(3).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[4][s_Language].ToString();
+
+            g_Lobby.g_RankButton.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[5][s_Language].ToString();   // 로비의 랭킹전 버튼
+
+            g_Lobby.g_DownSideGroup.transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[8][s_Language].ToString();    // 로비 아래쪽 레이아웃 그룹의 스킬
+            g_Lobby.g_DownSideGroup.transform.GetChild(1).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[9][s_Language].ToString();
+            g_Lobby.g_DownSideGroup.transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[10][s_Language].ToString();
+            g_Lobby.g_DownSideGroup.transform.GetChild(3).GetChild(0).GetComponent<TextMeshProUGUI>().text = TranslateData[11][s_Language].ToString();
+        }
+        #endregion
+
+        #region 코인, 보석 상점
+        if (b_isKorean || b_isChinese || b_isJapanese)
+        {
+            g_Lobby.G_CoinShop.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[12][s_Language].ToString();    // 코인 충전 상점 제목
+            g_Lobby.G_GemShop.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[13][s_Language].ToString();    // 젬 충전 상점 제목
+        }
+        else
+        {
+            g_Lobby.G_CoinShop.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[12]["English"].ToString();    // 코인 충전 상점 제목
+            g_Lobby.G_GemShop.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[13]["English"].ToString();    // 젬 충전 상점 제목
+        }
+        #endregion
+
+        #region 스킬창
+        if (b_isKorean || b_isChinese || b_isJapanese)
+            g_Lobby.G_Skill.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[8][s_Language].ToString();
+        else
+            g_Lobby.G_Skill.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[8]["English"].ToString();
+        g_Lobby.G_Skill.transform.GetChild(5).GetComponent<Text>().text = TranslateData[175][s_Language].ToString();
+        g_Lobby.G_Skill.transform.GetChild(6).GetComponent<Text>().text = TranslateData[162][s_Language].ToString();
+
+        str = TranslateData[14][s_Language].ToString();
+        split = str.Split('_');
+        str = null;
+        for (int i = 0; i < split.Length; ++i)
+        {
+            str += split[i];
+            if (i != split.Length - 1)
+            {
+                str += "\n";
+            }
+        }
+        g_Lobby.G_Skill.transform.GetChild(2).GetChild(0).GetComponent<SkillStat_Scr>().s_SkillName = str;   // 스킬들 이름
+        str = TranslateData[15][s_Language].ToString();
+        split = str.Split('_');
+        str = null;
+        for (int i = 0; i < split.Length; ++i)
+        {
+            str += split[i];
+            if (i != split.Length - 1)
+            {
+                str += "\n";
+            }
+        }
+        g_Lobby.G_Skill.transform.GetChild(2).GetChild(1).GetComponent<SkillStat_Scr>().s_SkillName = str;
+        str = TranslateData[16][s_Language].ToString();
+        split = str.Split('_');
+        str = null;
+        for (int i = 0; i < split.Length; ++i)
+        {
+            str += split[i];
+            if (i != split.Length - 1)
+            {
+                str += "\n";
+            }
+        }
+        g_Lobby.G_Skill.transform.GetChild(2).GetChild(2).GetComponent<SkillStat_Scr>().s_SkillName = str;
+        str = TranslateData[17][s_Language].ToString();
+        split = str.Split('_');
+        str = null;
+        for (int i = 0; i < split.Length; ++i)
+        {
+            str += split[i];
+            if (i != split.Length - 1)
+            {
+                str += "\n";
+            }
+        }
+        g_Lobby.G_Skill.transform.GetChild(2).GetChild(3).GetComponent<SkillStat_Scr>().s_SkillName = str;
+
+        for (int i = 0; i < g_Lobby.g_SkillPopUpList.transform.childCount; ++i)
+        {
+            Text t_Context = g_Lobby.g_SkillPopUpList.transform.GetChild(i).GetChild(1).GetChild(0).GetComponent<Text>();
+            t_Context.text = TranslateContext(170 + i);
+            if (t_Context.text.Length > 22)
+            {
+                g_Lobby.g_SkillPopUpList.transform.GetChild(i).GetChild(1).GetComponent<RectTransform>().sizeDelta = new Vector2(500f, 150f);
+                g_Lobby.g_SkillPopUpList.transform.GetChild(i).GetChild(1).GetChild(0).GetComponent<RectTransform>().sizeDelta = new Vector2(480f, 100f);
+            }
+            else
+            {
+                g_Lobby.g_SkillPopUpList.transform.GetChild(i).GetChild(1).GetComponent<RectTransform>().sizeDelta = new Vector2(500f, 100f);
+                g_Lobby.g_SkillPopUpList.transform.GetChild(i).GetChild(1).GetChild(0).GetComponent<RectTransform>().sizeDelta = new Vector2(480f, 50f);
+            }
+            ChangeFont(t_Context);
+        }
+        #endregion
+
+        #region 동료창
+        if (b_isKorean || b_isChinese || b_isJapanese)
+            g_Lobby.G_ManPower.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[9][s_Language].ToString();     // 동료 총 공격력, 제목 버튼
+        else
+            g_Lobby.G_ManPower.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[9]["English"].ToString();
+        g_Lobby.G_ManPower.transform.GetChild(6).GetComponent<AllMansAtk_Scr>().s_Atk = TranslateData[18][s_Language].ToString();
+        #endregion
+
+        #region 자판기창
+        if (b_isKorean || b_isChinese || b_isJapanese)
+        {
+            g_Lobby.G_VendingMachine.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[10][s_Language].ToString();  // 자판기 총 공격력, 제목 버튼
+            g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[139][s_Language].ToString();
+            g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[23][s_Language].ToString();
+            g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(6).GetChild(0).GetComponent<Text>().text = TranslateData[35][s_Language].ToString();
+        }
+        else
+        {
+            g_Lobby.G_VendingMachine.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[10]["English"].ToString();
+            g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[139]["English"].ToString();
+            g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[23]["English"].ToString();
+            g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(6).GetChild(0).GetComponent<Text>().text = TranslateData[35]["English"].ToString();
+        }
+        g_Lobby.G_VendingMachine.transform.GetChild(7).GetComponent<AllMachinesAtk_Scr>().s_Atk = TranslateData[18][s_Language].ToString();
+        g_Lobby.G_VendingMachine.transform.GetChild(8).GetChild(4).GetComponent<Text>().text = TranslateData[138][s_Language].ToString();
+        #endregion
+
+        #region 캐릭터 구매 상점
+        if (b_isKorean || b_isChinese || b_isJapanese)
+        {
+            g_Lobby.G_Shop.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[11][s_Language].ToString();    // 상점 제목 및 확인버튼
+            g_Lobby.G_CharacterShop.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[37][s_Language].ToString();   // 캐릭터 상점 제목 및 확인버튼
+        }
+        else
+        {
+            g_Lobby.G_Shop.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[11]["English"].ToString();    // 상점 제목 및 확인버튼
+            g_Lobby.G_CharacterShop.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[37]["English"].ToString();   // 캐릭터 상점 제목 및 확인버튼
+        }
+
+        // 이름 추가 리스트들의 각 직급(대리같은 직급)
+        for (int i = 0; i < 4; ++i)
+        {
+            ShopManager_Scr.instance.s_MiddleNameList[i] = TranslateData[24 + i][s_Language].ToString();
+            ShopManager_Scr.instance.s_TopNameList[i] = TranslateData[28 + i][s_Language].ToString();
+        }
+
+        Idx = 0;
+        for (int i = 0; i < ChangeManager_Scr.instance.t_CharacterList.childCount * 2; i += 2)
+        {
+            CharChangerStat_Scr obj = ChangeManager_Scr.instance.t_CharacterList.GetChild(Idx++).GetComponent<CharChangerStat_Scr>();
+
+            if (b_isEnglish || b_isIndia || b_isItalia || b_isGermany || b_isFrance || b_isVietnam)
+            {
+                obj.g_Button.transform.GetChild(0).GetComponent<Text>().text = TranslateData[23]["English"].ToString();
+                obj.g_BoughtButton.transform.GetChild(0).GetComponent<Text>().text = TranslateData[137]["English"].ToString();
+            }
+            else
+            {
+                obj.g_Button.transform.GetChild(0).GetComponent<Text>().text = TranslateData[23][s_Language].ToString();
+                obj.g_BoughtButton.transform.GetChild(0).GetComponent<Text>().text = TranslateData[137][s_Language].ToString();
+            }
+            ChangeFont(obj.g_BoughtButton.transform.GetChild(0).GetComponent<Text>());
+            ChangeFont(obj.g_Button.transform.GetChild(0).GetComponent<Text>());
+            if (b_isKorean || b_isJapanese || b_isChinese || b_isVietnam)
+                obj.s_Name = TranslateData[38 + i][s_Language].ToString();
+            else
+                obj.s_Name = TranslateData[38 + i]["English"].ToString();
+            obj.s_Ability = TranslateData[38 + i + 1][s_Language].ToString();
+        }
+        #endregion
+
+        #region 옵션창
+        if (b_isEnglish || b_isIndia || b_isItalia || b_isGermany || b_isFrance || b_isVietnam)
+        {
+            g_Lobby.Before_Option.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[50]["English"].ToString();
+            g_Lobby.Before_Option.transform.GetChild(1).GetChild(3).GetChild(2).GetComponent<Text>().text = TranslateData[51]["English"].ToString();
+            g_Lobby.Before_Option.transform.GetChild(1).GetChild(4).GetChild(2).GetComponent<Text>().text = TranslateData[52]["English"].ToString();
+            g_Lobby.Before_Option.transform.GetChild(1).GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[53]["English"].ToString();
+
+            g_Lobby.After_Pause.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[50]["English"].ToString();
+            g_Lobby.After_Pause.transform.GetChild(1).GetChild(2).GetChild(2).GetComponent<Text>().text = TranslateData[51]["English"].ToString();
+            g_Lobby.After_Pause.transform.GetChild(1).GetChild(3).GetChild(2).GetComponent<Text>().text = TranslateData[52]["English"].ToString();
+            g_Lobby.After_Pause.transform.GetChild(1).GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[53]["English"].ToString();
+
+            g_Lobby.G_Home.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[67]["English"].ToString();
+            g_Lobby.G_Home.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[68]["English"].ToString();
+        }
+        else
+        {
+            g_Lobby.Before_Option.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[50][s_Language].ToString();
+            g_Lobby.Before_Option.transform.GetChild(1).GetChild(3).GetChild(2).GetComponent<Text>().text = TranslateData[51][s_Language].ToString();
+            g_Lobby.Before_Option.transform.GetChild(1).GetChild(4).GetChild(2).GetComponent<Text>().text = TranslateData[52][s_Language].ToString();
+            g_Lobby.Before_Option.transform.GetChild(1).GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[53][s_Language].ToString();
+
+            g_Lobby.After_Pause.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[50][s_Language].ToString();
+            g_Lobby.After_Pause.transform.GetChild(1).GetChild(2).GetChild(2).GetComponent<Text>().text = TranslateData[51][s_Language].ToString();
+            g_Lobby.After_Pause.transform.GetChild(1).GetChild(3).GetChild(2).GetComponent<Text>().text = TranslateData[52][s_Language].ToString();
+            g_Lobby.After_Pause.transform.GetChild(1).GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[53][s_Language].ToString();
+
+            g_Lobby.G_Home.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[67][s_Language].ToString();
+            g_Lobby.G_Home.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[68][s_Language].ToString();
+        }
+        g_Lobby.G_Home.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateData[57][s_Language].ToString();
+        #endregion
+
+        #region 결과창
+        if (b_isKorean || b_isChinese || b_isJapanese)
+            str = TranslateData[62][s_Language].ToString();
+        else
+            str = TranslateData[62]["English"].ToString();
+        split = str.Split(' ');
+        str = null;
+        for (int i = 0; i < split.Length; ++i)
+        {
+            str += split[i];
+            if (i != split.Length - 1)
+            {
+                str += "\n";
+            }
+        }
+        RewardManager_Scr.instance.g_CurLevelClear.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = str;
+        #endregion
+
+        #region 레벨업창
+        if (b_isKorean || b_isChinese || b_isJapanese)
+            g_Lobby.G_LevelUp.transform.GetChild(2).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateData[63][s_Language].ToString();
+        else
+            g_Lobby.G_LevelUp.transform.GetChild(2).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateData[63]["English"].ToString();
+        #endregion
+
+        #region 게임종료창
+        if (b_isKorean || b_isChinese || b_isJapanese)
+        {
+            QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[65][s_Language].ToString();
+            QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[67][s_Language].ToString();
+            QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[68][s_Language].ToString();
+        }
+        else
+        {
+            QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[65]["English"].ToString();
+            QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[67]["English"].ToString();
+            QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[68]["English"].ToString();
+        }
+        QuitManager_Scr.instance.g_QuitPopUpMenu.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateData[66][s_Language].ToString();
+        #endregion
+
+        #region 출석창
+        if (b_isKorean || b_isChinese || b_isJapanese)
+            g_Lobby.G_Attendance.transform.GetChild(2).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateData[100][s_Language].ToString();
+        else
+            g_Lobby.G_Attendance.transform.GetChild(2).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateData[100]["English"].ToString();
+        g_Lobby.G_Attendance.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[103][s_Language].ToString();
+
+        for (int i = 0; i < AttendanceManager_Scr.instance.t_SlotParent.childCount; ++i)
+        {
+            GameObject obj = AttendanceManager_Scr.instance.t_SlotParent.GetChild(i).gameObject;
+            if (b_isKorean || b_isChinese || b_isJapanese)
+                obj.GetComponent<AttendanceSlot_Scr>().g_GetButton.transform.GetChild(0).GetComponent<Text>().text = TranslateContext(106);
+            else
+                obj.GetComponent<AttendanceSlot_Scr>().g_GetButton.transform.GetChild(0).GetComponent<Text>().text = TranslateContext(106, "English");
+            ChangeFont(obj.GetComponent<AttendanceSlot_Scr>().g_GetButton.transform.GetChild(0).GetComponent<Text>());
+        }
+        #endregion
+
+        #region 미션창
+        if (b_isKorean || b_isChinese || b_isJapanese)
+            g_Lobby.G_Mission.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateData[104][s_Language].ToString();
+        else
+            g_Lobby.G_Mission.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateData[104]["English"].ToString();
+
+        for (int i = 0; i < MissionManager_Scr.instance.G_MissionList.Length - 1; ++i)
+        {
+            MissionSlot_Scr slot = MissionManager_Scr.instance.G_MissionList[i].GetComponent<MissionSlot_Scr>();
+            if (b_isKorean || b_isChinese || b_isJapanese)
+                slot.g_Clear.transform.GetChild(0).GetComponent<Text>().text = TranslateContext(174);
+            else
+                slot.g_Clear.transform.GetChild(0).GetComponent<Text>().text = TranslateContext(174, "English");
+            switch (MissionManager_Scr.instance.i_MissionSlot[i])
+            {
+                case 0:
+                    slot.t_Context.text = TranslateContext(109 + (4 * i));
+                    break;
+                case 1:
+                    slot.t_Context.text = TranslateContext(110 + (4 * i));
+                    break;
+                case 2:
+                    slot.t_Context.text = TranslateContext(111 + (4 * i));
+                    break;
+                case 3:
+                    slot.t_Context.text = TranslateContext(112 + (4 * i));
+                    break;
+                default:
+                    break;
+            }
+            ChangeFont(slot.g_Clear.transform.GetChild(0).GetComponent<Text>());
+
+            ChangeFont(slot.t_Context, i_TMPNum);
+        }
+        MissionManager_Scr.instance.G_MissionList[3].GetComponent<MissionSlot_Scr>().t_Context.text = TranslateContext(174);
+        if (b_isKorean || b_isChinese || b_isJapanese)
+            MissionManager_Scr.instance.G_MissionList[3].GetComponent<MissionSlot_Scr>().g_Clear.transform.GetChild(0).GetComponent<Text>().text = TranslateContext(174);
+        else
+            MissionManager_Scr.instance.G_MissionList[3].GetComponent<MissionSlot_Scr>().g_Clear.transform.GetChild(0).GetComponent<Text>().text = TranslateContext(174, "English");
+
+
+        #endregion
+
+        #region 튜토리얼 아이콘
+        if (TutorialManager.instance.i_TutorialCount < 8)
+        {
+            g_Lobby.G_After.transform.GetChild(10).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[8][s_Language].ToString();
+            g_Lobby.G_After.transform.GetChild(10).GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[9][s_Language].ToString();
+            g_Lobby.G_After.transform.GetChild(10).GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[10][s_Language].ToString();
+            g_Lobby.G_After.transform.GetChild(10).GetChild(5).GetChild(0).GetComponent<Text>().text = TranslateData[11][s_Language].ToString();
+            ChangeFont(g_Lobby.G_After.transform.GetChild(10).GetChild(2).GetChild(0).GetComponent<Text>());
+            ChangeFont(g_Lobby.G_After.transform.GetChild(10).GetChild(3).GetChild(0).GetComponent<Text>());
+            ChangeFont(g_Lobby.G_After.transform.GetChild(10).GetChild(4).GetChild(0).GetComponent<Text>());
+            ChangeFont(g_Lobby.G_After.transform.GetChild(10).GetChild(5).GetChild(0).GetComponent<Text>());
+        }
+        #endregion
+
+        #region 말풍선
+
+        RespawnManager.instance.ShuffleScriptList();
+        RespawnManager.instance.i_SpeechCount = 0;
+
+        for (int i = 0; i < RespawnManager.instance.go_GroupSpeechBubble.transform.childCount; i++)
+        {
+            if (i != 4)
+            {
+                SpeechBubble script = RespawnManager.instance.go_GroupSpeechBubble.transform.GetChild(i).transform.GetComponent<SpeechBubble>();
+                if (!Button_Option.instance.b_WindowOn)
+                {
+                    script.Delay();
+                    script.f_Changetime = 0.2f;
+                    script.b_ChangedSize = false;
+                }
+                else
+                {
+                    script.DelayStart();
+                    script.f_Changetime = 0.2f;
+                    script.b_ChangedSize = false;
+                }
+            }
+            else
+            {
+                for (int j = 0; j < RespawnManager.instance.go_GroupSpeechBubble.transform.GetChild(j).childCount; j++)
+                {
+                    SpeechBubble script = RespawnManager.instance.go_GroupSpeechBubble.transform.GetChild(i).GetChild(j).GetComponent<SpeechBubble>();
+                    if (!Button_Option.instance.b_WindowOn)
+                    {
+                        script.Delay();
+                        script.f_Changetime = 0.2f;
+                        script.b_ChangedSize = false;
+                    }
+                    else
+                    {
+                        script.b_isSpeech = false;
+                        script.DelayStart();
+                        script.f_Changetime = 0.2f;
+                        script.b_ChangedSize = false;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < RespawnManager.instance.go_BulldogSpeechBubble.transform.childCount; i++)
+        {
+            SpeechBubble script = RespawnManager.instance.go_BulldogSpeechBubble.transform.GetChild(i).GetComponent<SpeechBubble>();
+            if (!Button_Option.instance.b_WindowOn)
+            {
+                script.Delay();
+                script.f_Changetime = 0.2f;
+                script.b_ChangedSize = false;
+            }
+            else
+            {
+                script.b_isSpeech = false;
+                script.DelayStart();
+                script.f_Changetime = 0.2f;
+                script.b_ChangedSize = false;
+            }
+        }
+        #endregion
+
+        #region 이름 변경 상점
+
+        ShopManager_Scr.instance.t_Shop.GetChild(0).transform.GetComponent<ProductStat_Scr>().t_Context.text = TranslateData[158][s_Language].ToString();
+        // 이름 바꾸는 상점
+        if (b_isKorean || b_isChinese || b_isJapanese)
+        {
+            ShopManager_Scr.instance.g_ChangeWindow.transform.GetChild(5).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateContext(34);
+            ShopManager_Scr.instance.g_ChangeWindow.transform.GetChild(6).GetChild(0).GetComponent<Text>().text = TranslateContext(35);
+        }
+        else
+        {
+            ShopManager_Scr.instance.g_ChangeWindow.transform.GetChild(5).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateContext(34, "English");
+            ShopManager_Scr.instance.g_ChangeWindow.transform.GetChild(6).GetChild(0).GetComponent<Text>().text = TranslateContext(35, "English");
+        }
+
+        for (int i = 0; i < ShopManager_Scr.instance.g_MiddleNames.Length; ++i)
+        {
+            ShopManager_Scr.instance.g_MiddleNames[i].GetComponent<ProductStat_Scr>().i_JobNum = i;
+            ShopManager_Scr.instance.g_MiddleNames[i].GetComponent<ProductStat_Scr>().b_isMiddle = true;
+            ShopManager_Scr.instance.g_MiddleNames[i].GetComponent<ProductStat_Scr>().b_isTop = false;
+
+            for (int j = 0; j < 4; ++j)
+            {
+                ShopManager_Scr.instance.s_MiddleNameList[j] = TranslateContext(24 + j);
+                ShopManager_Scr.instance.g_MiddleNames[i].GetComponent<ProductStat_Scr>().t_Name.text = ShopManager_Scr.instance.s_MiddleNameList[i];
+                ShopManager_Scr.instance.g_MiddleNames[i].GetComponent<ProductStat_Scr>().t_Context.text = TranslateContext(32);
+
+                if (b_isKorean || b_isEnglish
+                    || b_isIndia || b_isVietnam
+                    || b_isFrance || b_isGermany
+                    || b_isItalia)
+                {
+                    ChangeFont(ShopManager_Scr.instance.g_MiddleNames[i].GetComponent<ProductStat_Scr>().t_Context, 0);
+                }
+                else if (b_isJapanese)
+                {
+                    ChangeFont(ShopManager_Scr.instance.g_MiddleNames[i].GetComponent<ProductStat_Scr>().t_Context, 1);
+                }
+                else if (b_isChinese)
+                {
+                    ChangeFont(ShopManager_Scr.instance.g_MiddleNames[i].GetComponent<ProductStat_Scr>().t_Context, 2);
+                }
+            }
+            ShopManager_Scr.instance.g_MiddleNames[i].GetComponent<ProductStat_Scr>().i_Cash = (int)ShopManager_Scr.instance.ShopData[14 + i]["Buy"];
+        }
+        int k = 0;
+        for (int i = 0; i < ShopManager_Scr.instance.g_TopNames.Length; ++i)
+        {
+            ShopManager_Scr.instance.g_TopNames[i].GetComponent<ProductStat_Scr>().i_JobNum = k++;
+            ShopManager_Scr.instance.g_TopNames[i].GetComponent<ProductStat_Scr>().b_isMiddle = false;
+            ShopManager_Scr.instance.g_TopNames[i].GetComponent<ProductStat_Scr>().b_isTop = true;
+
+            for (int j = 0; j < 4; ++j)
+            {
+                ShopManager_Scr.instance.s_TopNameList[j] = TranslateContext(28 + j);
+                ShopManager_Scr.instance.g_TopNames[i].GetComponent<ProductStat_Scr>().t_Name.text = ShopManager_Scr.instance.s_TopNameList[i];
+                ShopManager_Scr.instance.g_TopNames[i].GetComponent<ProductStat_Scr>().t_Context.text = TranslateContext(32);
+                if (b_isKorean || b_isEnglish
+                    || b_isIndia || b_isVietnam
+                    || b_isFrance || b_isGermany
+                    || b_isItalia)
+                {
+                    ChangeFont(ShopManager_Scr.instance.g_TopNames[i].GetComponent<ProductStat_Scr>().t_Name, 0);
+                }
+                else if (b_isJapanese)
+                {
+                    ChangeFont(ShopManager_Scr.instance.g_TopNames[i].GetComponent<ProductStat_Scr>().t_Name, 1);
+                }
+                else if (b_isChinese)
+                {
+                    ChangeFont(ShopManager_Scr.instance.g_TopNames[i].GetComponent<ProductStat_Scr>().t_Name, 2);
+                }
+            }
+
+            ShopManager_Scr.instance.g_TopNames[i].GetComponent<ProductStat_Scr>().i_Cash = (int)ShopManager_Scr.instance.ShopData[18 + i]["Buy"];
+        }
+
+        #endregion
+
+        #region 스테이지 선택
+
+        g_Lobby.G_Stage.transform.GetChild(5).GetChild(0).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[160][s_Language].ToString();
+
+        if (b_isKorean || b_isChinese || b_isJapanese)
+        {
+            g_Lobby.G_Stage.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[159][s_Language].ToString();
+            g_Lobby.G_Stage.transform.GetChild(5).GetChild(0).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[67][s_Language].ToString();
+            g_Lobby.G_Stage.transform.GetChild(5).GetChild(0).GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[68][s_Language].ToString();
+        }
+        else
+        {
+            g_Lobby.G_Stage.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[159]["English"].ToString();
+            g_Lobby.G_Stage.transform.GetChild(5).GetChild(0).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[67]["English"].ToString();
+            g_Lobby.G_Stage.transform.GetChild(5).GetChild(0).GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[68]["English"].ToString();
+        }
+        #endregion
+
+        #region 스테이지 결과창
+        // 현 스테이지 클리어
+        if (b_isKorean || b_isChinese || b_isJapanese)
+            str = TranslateContext(62);
+        else
+            str = TranslateContext(62, "English");
+        string[] strs = str.Split(' ');
+        if (strs.Length > 1)
+        {
+            str = strs[0] + "\n" + strs[1];
+        }
+        else
+            str = strs[0];
+        RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(1).GetChild(0).GetChild(0).GetComponent<Text>().text = str;
+        if (b_isKorean || b_isChinese || b_isJapanese)
+        {
+            RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[161][s_Language].ToString();
+            RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[2][s_Language].ToString();
+
+            // 로비
+            RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(2).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateData[161][s_Language].ToString();
+            // 공유
+            RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[2][s_Language].ToString();
+
+            // 랭킹
+            RewardManager_Scr.instance.G_Lose.transform.GetChild(1).GetChild(0).GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[1][s_Language].ToString();
+            // 공유
+            RewardManager_Scr.instance.G_Lose.transform.GetChild(1).GetChild(0).GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[2][s_Language].ToString();
+        }
+        else
+        {
+            RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[161]["English"].ToString();
+            RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>().text = TranslateData[2]["English"].ToString();
+
+            // 로비
+            RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(2).GetChild(0).GetChild(0).GetComponent<Text>().text = TranslateData[161]["English"].ToString();
+            // 공유
+            RewardManager_Scr.instance.G_Win.transform.GetChild(0).GetChild(2).GetChild(1).GetChild(0).GetComponent<Text>().text = TranslateData[2]["English"].ToString();
+
+            // 랭킹
+            RewardManager_Scr.instance.G_Lose.transform.GetChild(1).GetChild(0).GetChild(3).GetChild(0).GetComponent<Text>().text = TranslateData[1]["English"].ToString();
+            // 공유
+            RewardManager_Scr.instance.G_Lose.transform.GetChild(1).GetChild(0).GetChild(4).GetChild(0).GetComponent<Text>().text = TranslateData[2]["English"].ToString();
+        }
+        #endregion
+
+        #region 버전체크 창(업데이트)
+        if (newVersionAvailable != null)
+        {
+            if (b_isKorean || b_isChinese || b_isJapanese)
+            {
+                newVersionAvailable.transform.GetChild(2).GetChild(0).GetChild(0).transform.GetComponent<Text>().text = TranslateData[168][s_Language].ToString() + "\n" + TranslateData[169][s_Language].ToString();
+                newVersionAvailable.transform.GetChild(2).GetChild(1).GetChild(0).transform.GetComponent<Text>().text = TranslateData[167][s_Language].ToString();
+                newVersionAvailable.transform.GetChild(2).GetChild(2).GetChild(0).transform.GetComponent<Text>().text = TranslateData[166][s_Language].ToString();
+                newVersionAvailable.transform.GetChild(2).GetChild(3).GetChild(0).transform.GetComponent<Text>().text = TranslateData[53][s_Language].ToString();
+            }
+            else
+            {
+                newVersionAvailable.transform.GetChild(2).GetChild(0).GetChild(0).transform.GetComponent<Text>().text = TranslateData[168]["English"].ToString() + "\n" + TranslateData[169]["English"].ToString();
+                newVersionAvailable.transform.GetChild(2).GetChild(1).GetChild(0).transform.GetComponent<Text>().text = TranslateData[167]["English"].ToString();
+                newVersionAvailable.transform.GetChild(2).GetChild(2).GetChild(0).transform.GetComponent<Text>().text = TranslateData[166]["English"].ToString();
+                newVersionAvailable.transform.GetChild(2).GetChild(3).GetChild(0).transform.GetComponent<Text>().text = TranslateData[53]["English"].ToString();
+            }
+            ChangeFont(newVersionAvailable.transform.GetChild(2).GetChild(0).GetChild(0).transform.GetComponent<Text>());
+            ChangeFont(newVersionAvailable.transform.GetChild(2).GetChild(1).GetChild(0).transform.GetComponent<Text>());
+            ChangeFont(newVersionAvailable.transform.GetChild(2).GetChild(2).GetChild(0).transform.GetComponent<Text>());
+            ChangeFont(newVersionAvailable.transform.GetChild(2).GetChild(3).GetChild(0).transform.GetComponent<Text>());
+        }
+        #endregion
+
+        #region 리뷰권유창
+        if (b_isKorean || b_isChinese || b_isJapanese)
+        {
+            g_Review[1].text = TranslateData[176][s_Language].ToString();
+            g_Review[2].text = TranslateData[67][s_Language].ToString();
+            g_Review[3].text = TranslateData[68][s_Language].ToString();
+        }
+        else
+        {
+            g_Review[1].text = TranslateData[176]["English"].ToString();
+            g_Review[2].text = TranslateData[67]["English"].ToString();
+            g_Review[3].text = TranslateData[68]["English"].ToString();
+        }
+
+        if (b_isJapanese)
+        {
+            string _str = TranslateData[177][s_Language].ToString();
+            string[] _strs = _str.Split('ら');
+            if (_strs.Length > 1)
+            {
+                _str = _strs[0] + "ら" + "\n" + _strs[1];
+            }
+            else
+                _str = _strs[0];
+
+            g_Review[0].text = _str;
+        }
+        else
+        {
+            string _str = TranslateData[177][s_Language].ToString();
+            string[] _strs = _str.Split(',');
+            if (_strs.Length > 1)
+            {
+                _str = _strs[0] + "," + "\n" + _strs[1];
+            }
+            else
+                _str = _strs[0];
+
+            g_Review[0].text = _str;
+        }
+
+
+        #endregion
+
+        #region 프리미어모드 보유 체크
+        if (b_isEnglish || b_isIndia || b_isItalia || b_isGermany || b_isFrance || b_isVietnam)
+        {
+            t_ADPremium.text = TranslateData[137]["English"].ToString();
+        }
+        else
+            t_ADPremium.text = TranslateData[137][s_Language].ToString();
+
+        ShopManager_Scr.instance.ChangeInputField();
+        #endregion
+
+        TutorialManager.instance.InitTutorial();
+        ShopManager_Scr.instance.InitShop();
+
+        Button_Option.instance.TranslateUI();
+    }
+
+    public string TranslateContext(int _Num)
+    {
+        // 74부터 + 2
+        return TranslateData[_Num][s_Language].ToString();
+    }
+    public string TranslateContext(int _Num, string str)
+    {
+        // 74부터 + 2
+        return TranslateData[_Num][str].ToString();
+    }
+
+    public void ChangeFont(Text text)
+    {
+        text.font = f_Font[(int)myFont];
+    }
+    public void ChangeFont(TextMeshProUGUI text, int num)
+    {
+        text.font = f_TMPFont[num];
+    }
+
+    public void ChangeFontMaterial(TextMeshProUGUI text, int num)
+    {
+        text.fontMaterial = f_TMPMaterial[num];
+    }
+
+    public void ChangeFont(Text text, int num)
+    {
+        text.font = f_Font[num];
+    }
+
+    public class Country
+    {
+        public string businessName;
+        public string businessWebsite;
+        public string city;
+        public string continent;
+        public string country;
+        public string countryCode;
+        public string ipName;
+        public string ipType;
+        public string isp;
+        public string lat;
+        public string lon;
+        public string org;
+        public string query;
+        public string region;
+        public string status;
+    }
+}

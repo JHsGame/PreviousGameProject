@@ -1,0 +1,209 @@
+using Dicom;
+using Dicom.Imaging;
+using Parabox.Stl;
+using SFB;
+using System.IO;
+using System.Text;
+using UnityEngine;
+using VolumeRendering;
+
+public class FileLoader : MonoBehaviour
+{
+    public Texture2DArrayToTexture3DConverter converter;
+    string error;
+    public TestController controller;
+    public GameObject objMeshToExport;
+    public GameObject source;
+    string path;
+    public Mesh[] meshs;
+
+    public void OnGUI()
+    {
+        GUI.matrix = Matrix4x4.TRS(new Vector3(50, 50, 1), Quaternion.identity, new Vector3(3, 2.5f, 1));
+
+        if (GUILayout.Button("Open STL File"))
+        {
+            WriteSTL(StandaloneFileBrowser.OpenFilePanel("Open File", "", "", false));
+        }
+
+        /*GUI.matrix = Matrix4x4.TRS(new Vector3(50, 100, 1), Quaternion.identity, new Vector3(3, 2.5f, 1));
+
+        if (GUILayout.Button("Open Texture File"))
+        {
+            WriteTexture(StandaloneFileBrowser.OpenFilePanel("Open File", "", "", false));
+        }*/
+
+
+        GUI.matrix = Matrix4x4.TRS(new Vector3(50, 50, 1), Quaternion.identity, new Vector3(3, 2.5f, 1));
+
+        if (GUILayout.Button("Open .dcm Folder"))
+        {
+            var paths = StandaloneFileBrowser.OpenFolderPanel("Select Folder", "", true);
+            WriteTexture(paths);
+        }
+
+        GUILayout.Space(15);
+    }
+
+    public void WriteSTL(string[] paths)
+    {
+        bool b_isUpper = false;
+        if (paths.Length == 0)
+        {
+            return;
+        }
+
+        path = "";
+
+        foreach (var p in paths)
+        {
+            // 확장자명까지 포함
+            path += p;
+        }
+
+        string str = "UpperJaw";
+
+        if (path.Contains(str))
+        {
+            b_isUpper = true;
+        }
+        objMeshToExport.transform.position = Vector3.zero;
+        objMeshToExport.transform.rotation = Quaternion.identity;
+
+        Transform[] sourceArray = objMeshToExport.GetComponentsInChildren<Transform>();
+        foreach (Transform t in sourceArray)
+        {
+            if (t.name != objMeshToExport.name)
+                Destroy(t.gameObject);
+        }
+
+        Mesh[] mesh = Importer.Import(path);
+        meshs = mesh;
+        foreach (Mesh m in meshs)
+        {
+            GameObject obj = Instantiate(source, Vector3.zero, Quaternion.identity);
+            obj.GetComponent<MeshFilter>().mesh = m;
+            obj.transform.SetParent(objMeshToExport.transform);
+        }
+
+        objMeshToExport.transform.position = new Vector3(-100f, 0f, 0f);
+        if (b_isUpper)
+        {
+            objMeshToExport.transform.rotation = Quaternion.Euler(new Vector3(0f, 0f, 45f));
+        }
+        else
+        {
+            objMeshToExport.transform.rotation = Quaternion.Euler(new Vector3(0f, 0f, -45f));
+        }
+    }
+
+    public void WriteTexture(string[] paths)
+    {
+        /*
+        if (paths.Length == 0)
+        {
+            return;
+        }
+
+        path = "";
+
+        foreach (var p in paths)
+        {
+            path += p;
+        }
+
+        controller.ChangeTexture(path);
+        */
+        converter.texture2DArray.Clear();
+        if (paths.Length == 0)
+        {
+            return;
+        }
+
+        path = "";
+        foreach (var p in paths)
+        {
+            path += p;
+        }
+        SystemIOFileLoad(path);
+    }
+    public string test;
+    public string s;
+    private void SystemIOFileLoad(string Path)
+    {
+        //Dicom.Imaging.Codec.TranscoderManager.SetImplementation(new Dicom.Imaging.NativeCodec.NativeTranscoderManager());
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var info = new DirectoryInfo(path);
+        var fileInfo = info.GetFiles();
+        foreach (var file in fileInfo)
+        {
+            if (file.Extension == ".dcm")
+            {
+                DicomFile dicomFile = DicomFile.Open(file.FullName);
+                DicomImage image = new DicomImage(dicomFile.Dataset);
+                test = image.RenderImage().ToString();
+                var tex2d = image.RenderImage().As<Texture2D>();
+                converter.texture2DArray.Add(tex2d);
+
+                //var f = DicomFile.Open(file.FullName);
+                //f.Dataset.AddOrUpdate(DicomTag.SpecificCharacterSet, "x-cp20949");
+                //f.Dataset.AddOrUpdate(new DicomPersonName(DicomTag.PatientName, DicomEncoding.GetEncoding("x-cp20949"), "???"));
+                //byte[] bData = DicomEncoding.Default.GetBytes(f.File.Name);
+                //var image = new Dicom.Imaging.DicomImage(DicomEncoding.Default.GetString(bData));
+
+                //Encoding enkr = Encoding.GetEncoding(949);
+                //byte[] bData = Encoding.Default.GetBytes(file.FullName);
+                //byte[] bConvert = Encoding.Convert(enkr, Encoding.Default, bData);
+                //string str = Encoding.Default.GetString(bConvert);
+                //var image = new Dicom.Imaging.DicomImage(str);
+                //s = str;
+
+                //byte[] bData = Encoding.UTF8.GetBytes(file.FullName);
+                //var image = new Dicom.Imaging.DicomImage(Encoding.UTF8.GetString(bData));
+
+                //var image = new Dicom.Imaging.DicomImage(file.FullName);
+                //test = image.RenderImage().ToString();
+                //var tex2d = image.RenderImage().As<Texture2D>();
+                //converter.texture2DArray.Add(tex2d);
+            }
+        }
+
+        Convert();
+    }
+
+    public void Convert()
+    {
+        var tex2dArray = converter.texture2DArray;
+        tex2dArray.Reverse();
+        if (tex2dArray.Count == 0)
+        {
+            error = "no image";
+        }
+
+        var w = tex2dArray[0].width;
+        var h = tex2dArray[0].height;
+        var d = tex2dArray.Count;
+        var format = tex2dArray[0].format;
+        var colors = new UnityEngine.Color32[w * h * d];
+
+        for (int i = 0; i < d; ++i)
+        {
+            var tex2d = tex2dArray[i];
+            if (tex2d.width != w || tex2d.height != h)
+            {
+                error = "texture size error";
+            }
+            if (tex2d.format != format)
+            {
+                error = "texture format error";
+            }
+            tex2d.GetPixels32().CopyTo(colors, w * h * i);
+        }
+
+        var tex3d = new Texture3D(w, h, d, format, false);
+        tex3d.SetPixels32(colors);
+        tex3d.Apply();
+
+        controller.ChangeTexture(tex3d);
+    }
+}

@@ -1,0 +1,146 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public enum myLanguages
+{
+    Korean, English, Chinese, Japanese, Vietnam, France, Germany, Italia
+}
+
+public class TranslateManager_Scr : MonoBehaviour
+{
+    private static TranslateManager_Scr instance;
+
+    SystemLanguage mobileLanguage;
+    myLanguages myLanguage;
+
+
+    [SerializeField]
+    private TextAsset data_Lobby;
+    [SerializeField]
+    private TextAsset data_InGame;
+
+    private List<Dictionary<string, object>> TranslateLobby;
+    private List<Dictionary<string, object>> TranslateInGame;
+
+    public myLanguages Languages { get => myLanguage; }
+
+    public static TranslateManager_Scr Instance
+    {
+        get
+        {
+            if (instance != null)
+                return instance;
+            else
+                return null;
+        }
+    }
+
+    private void Awake()
+    {
+        if (instance != null)
+            return;
+        else
+        {
+            instance = this;
+            TranslateLobby = CSVReader.Read(data_Lobby);
+            DontDestroyOnLoad(this.gameObject);
+        }
+    }
+
+    void Start()
+    {
+        mobileLanguage = Application.systemLanguage;
+
+        switch (mobileLanguage)
+        {
+            case SystemLanguage.Afrikaans:
+            case SystemLanguage.Arabic:
+            case SystemLanguage.Basque:
+            case SystemLanguage.Belarusian:
+            case SystemLanguage.Bulgarian:
+            case SystemLanguage.Catalan:
+            case SystemLanguage.Czech:
+            case SystemLanguage.Danish:
+            case SystemLanguage.Dutch:
+            case SystemLanguage.English:
+            case SystemLanguage.Estonian:
+            case SystemLanguage.Faroese:
+            case SystemLanguage.Finnish:
+            case SystemLanguage.Greek:
+            case SystemLanguage.Hebrew:
+            case SystemLanguage.Icelandic:
+            case SystemLanguage.Indonesian:
+            case SystemLanguage.Latvian:
+            case SystemLanguage.Lithuanian:
+            case SystemLanguage.Norwegian:
+            case SystemLanguage.Polish:
+            case SystemLanguage.Portuguese:
+            case SystemLanguage.Romanian:
+            case SystemLanguage.Russian:
+            case SystemLanguage.SerboCroatian:
+            case SystemLanguage.Slovak:
+            case SystemLanguage.Slovenian:
+            case SystemLanguage.Spanish:
+            case SystemLanguage.Swedish:
+            case SystemLanguage.Thai:
+            case SystemLanguage.Turkish:
+            case SystemLanguage.Ukrainian:
+            case SystemLanguage.Unknown:
+                myLanguage = myLanguages.English;
+                break;
+
+            case SystemLanguage.French:
+                myLanguage = myLanguages.France;
+                break;
+
+            case SystemLanguage.German:
+                myLanguage = myLanguages.Germany;
+                break;
+
+            case SystemLanguage.Vietnamese:
+                myLanguage = myLanguages.Vietnam;
+                break;
+
+            case SystemLanguage.ChineseSimplified:
+            case SystemLanguage.ChineseTraditional:
+            case SystemLanguage.Chinese:
+                myLanguage = myLanguages.Chinese;
+                break;
+
+            case SystemLanguage.Italian:
+                myLanguage = myLanguages.Italia;
+                break;
+
+            case SystemLanguage.Japanese:
+                myLanguage = myLanguages.Japanese;
+                break;
+
+            case SystemLanguage.Korean:
+                myLanguage = myLanguages.Korean;
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    public string TranslateContext(string _str, int _num)
+    {
+        // _str : 각 씬을 구분, _num : csv에서 변경하고자 하는 내용의 번호
+        switch (_str)
+        {
+            case "Lobby":
+                return TranslateLobby[_num][myLanguage.ToString()].ToString();
+            case "InGame":
+                return TranslateInGame[_num][myLanguage.ToString()].ToString();
+            default:
+                return null;
+        }
+    }
+
+    public void ChangeFont()
+    {
+        // 언어에 따른 폰트 변경 함수
+    }
+}

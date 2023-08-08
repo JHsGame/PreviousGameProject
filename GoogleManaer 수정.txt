@@ -1,0 +1,746 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEditor;
+using GooglePlayGames;
+using GooglePlayGames.BasicApi;
+using GooglePlayGames.BasicApi.SavedGame;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Security;
+using UnityEngine.Analytics;
+using System;
+using System.IO;
+using System.Text;
+
+public class GoogleManager_Scr : MonoBehaviour
+{
+    public static GoogleManager_Scr instance;
+
+    public GameObject g_WarningPanel;
+
+    public string loginMail;
+
+    public Texture2D t_ShareImage;
+
+    public bool b_isLogin = false;
+    public bool b_isDone = false;   // 로그인 시도가 끝났는지 체크여부
+    public bool b_OffLoad = false;
+    public bool b_isNextScene = false;
+    public bool b_isReLogin = false;
+
+    public int i_RankingPoint = 0;
+
+    string s_Data = "saveData.json";
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            b_OffLoad = false;
+            DontDestroyOnLoad(this.gameObject);
+        }
+        else
+            return;
+    }
+
+    void Start()
+    {
+#if UNITY_ANDROID
+
+        PlayGamesClientConfiguration config = new PlayGamesClientConfiguration
+        .Builder()
+        .RequestServerAuthCode(false)
+        .AddOauthScope("email")
+        .EnableSavedGames()
+        .RequestEmail()
+        .Build();
+        PlayGamesPlatform.InitializeInstance(config);
+        PlayGamesPlatform.DebugLogEnabled = true;
+        PlayGamesPlatform.Activate();
+        LogIn();
+
+#elif UNITY_IOS
+
+
+#endif
+
+
+    }
+    private void Update()
+    {
+        if (SceneManager.GetActiveScene().name == "PlayScene")
+        {
+            if (!b_isReLogin && Application.internetReachability == NetworkReachability.NotReachable)
+            {
+                b_isReLogin = true;
+                b_isLogin = false;
+                StartCoroutine(ReLogin());
+            }
+        }
+    }
+
+    public void testLink()
+    {
+        string URL = "https://play.google.com/apps/testing/com.DefaultCompany.CompanyStrike"; //  URL
+        Application.OpenURL(URL);
+        Application.Quit();
+    }
+
+    void localfileload()
+    {
+        string s_Path = Path.Combine(Application.persistentDataPath + "/saveData.json");
+        Save_Load.instance.s_Path = s_Path;
+        if (File.Exists(s_Path))
+        {
+            string code = File.ReadAllText(s_Path, Encoding.UTF8);
+            Save_Load.instance.LoadData(code);
+        }
+        else
+        {
+
+        }
+
+        b_isNextScene = true;
+        g_WarningPanel.SetActive(false);
+    }
+
+    public void LogIn()
+    {
+        //이미 인증된 사용자는 바로 로그인 성공됩니다.
+        if (!b_isDone)
+        {
+            b_OffLoad = true;
+            if (Application.internetReachability != NetworkReachability.NotReachable)
+            {
+#if UNITY_ANDROID
+                if (PlayGamesPlatform.Instance.localUser.authenticated)
+                {
+
+                    loginMail = PlayGamesPlatform.Instance.GetUserEmail();
+
+
+
+                    StartCoroutine(CreateUserData());
+
+                    b_isLogin = true;
+                    b_isDone = true;
+                    if (g_WarningPanel.activeSelf)
+                    {
+                        //localfileload();
+                        Save_Load.instance.Datadownload();
+                        //LoadCloud();
+                    }
+                    else
+                    {
+                        //localfileload();
+                        string s_Path = Path.Combine(Application.persistentDataPath + "/saveData_" + loginMail + ".json");
+                        Save_Load.instance.s_Path = s_Path;
+                        if (File.Exists(s_Path))
+                        {
+                            string code = File.ReadAllText(s_Path, Encoding.UTF8);
+                            Save_Load.instance.LoadData(code);
+                        }
+                        else
+                        {
+                            Save_Load.instance.Datadownload();
+                            //LoadCloud();
+                        }
+                    }
+
+                }
+                else
+                {
+                    PlayGamesPlatform.Instance.localUser.Authenticate((bool success) =>
+                    {
+                        if (success)
+                        {
+                            loginMail = PlayGamesPlatform.Instance.GetUserEmail();
+
+                            StartCoroutine(CreateUserData());
+
+                            b_isLogin = true;
+                            b_isDone = true;
+                            if (g_WarningPanel.activeSelf)
+                            {
+                                //localfileload();
+                                Save_Load.instance.Datadownload();
+                                //LoadCloud();
+                            }
+                            else
+                            {
+                                // localfileload();
+                                string s_Path = Path.Combine(Application.persistentDataPath + "/saveData_" + loginMail + ".json");
+                                Save_Load.instance.s_Path = s_Path;
+                                if (File.Exists(s_Path))
+                                {
+                                    string code = File.ReadAllText(s_Path, Encoding.UTF8);
+                                    Save_Load.instance.LoadData(code);
+                                }
+                                else
+                                {
+                                    Save_Load.instance.Datadownload();
+                                    //LoadCloud();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log("로그인 실패");
+                            b_isLogin = false;
+                            b_isDone = true;
+                            //localfileload();
+
+                            string s_Path = Path.Combine(Application.persistentDataPath + "/saveData_editor.json");
+                            Save_Load.instance.s_Path = s_Path;
+                            if (File.Exists(s_Path))
+                            {
+                                string code = File.ReadAllText(s_Path, Encoding.UTF8);
+                                Save_Load.instance.LoadData(code);
+                            }
+                            else
+                            {
+#if UNITY_EDITOR
+                                Save_Load.instance.Datadownload();
+                                //LoadCloud();
+#else
+                                // 오프라인에서 세이브 데이터를 불러올 수 없으므로 경고 팝업창을 띄운다.
+                                b_OffLoad = false;
+                                b_isDone = false;
+                                g_WarningPanel.SetActive(true);
+#endif
+                            }
+                        }
+                    });
+                }
+
+#elif UNITY_IOS
+
+
+#endif
+            }
+            else
+            {
+                Debug.Log("네트워크 연결 실패");
+                b_isLogin = false;
+                b_isDone = true;
+                //localfileload();
+                string s_Path = Path.Combine(Application.persistentDataPath + "/saveData_editor.json");
+                Save_Load.instance.s_Path = s_Path;
+                if (File.Exists(s_Path))
+                {
+                    string code = File.ReadAllText(s_Path, Encoding.UTF8);
+                    Save_Load.instance.LoadData(code);
+                }
+                else
+                {
+                    // 오프라인에서 세이브 데이터를 불러올 수 없으므로 경고 팝업창을 띄운다.
+                    b_OffLoad = false;
+                    b_isDone = false;
+                    g_WarningPanel.SetActive(true);
+                }
+            }
+        }
+    }
+
+    IEnumerator CreateUserData()
+    {
+        while (true)
+        {
+            if (DatabaseManager.instance != null)
+                break;
+            yield return new WaitForEndOfFrame();
+        }
+
+        DatabaseManager.instance.CreateUserData(loginMail);
+    }
+
+    IEnumerator ReLogin()
+    {
+        while (!b_isLogin)
+        {
+#if UNITY_ANDROID
+            PlayGamesPlatform.Instance.localUser.Authenticate((bool success) =>
+            {
+                if (success)
+                {
+                    b_isLogin = true;
+                    b_isDone = true;
+                    StartCoroutine(CreateUserData());
+
+
+
+                    string jsonData = JsonUtility.ToJson(s_Data);
+                    byte[] bytes = Encoding.UTF8.GetBytes(jsonData);
+                    string code = Convert.ToBase64String(bytes);
+                    Save_Load.instance.Dataupload(code);
+                    //SaveCloud();
+                }
+                else
+                {
+                    b_isLogin = false;
+                    b_isDone = true;
+                }
+            });
+
+#elif UNITY_IOS
+
+            b_isLogin = true;
+            b_isDone = true;
+
+#endif
+            yield return null;
+        }
+        b_isReLogin = false;
+        StopCoroutine(ReLogin());
+    }
+    public void OnClickQuit()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
+    public void LoadCloud()
+    {
+#if UNITY_EDITOR
+        Save_Load.instance.LoadData(null);
+
+#elif UNITY_ANDROID
+        PlayGamesPlatform.Instance.SavedGame.OpenWithAutomaticConflictResolution(s_Data,
+            DataSource.ReadCacheOrNetwork, ConflictResolutionStrategy.UseLastKnownGood, LoadGame);
+
+#elif UNITY_IOS
+
+#endif
+    }
+    public void LoadGame(SavedGameRequestStatus status, ISavedGameMetadata game)
+    {
+        Debug.Log("불러오기 실패");
+        if (status == SavedGameRequestStatus.Success)
+        {
+#if UNITY_ANDROID
+            PlayGamesPlatform.Instance.SavedGame.ReadBinaryData(game, LoadData);
+
+#elif UNITY_IOS
+
+            Debug.Log("ef22");
+
+#endif
+        }
+        else
+        {
+            // 불러올 데이터가 없으면 그냥 넘겨버리기
+            if (b_isLogin)
+            {
+                Save_Load.instance.LoadData(null);
+                Debug.Log("불러오기 실패");
+            }
+        }
+        Debug.Log("불러오기 실패");
+    }
+    public void LoadData(SavedGameRequestStatus status, byte[] LoadedData)
+    {
+        if (status == SavedGameRequestStatus.Success)
+        {
+            string code = Encoding.UTF8.GetString(LoadedData);
+            Save_Load.instance.LoadData(code);
+        }
+        else
+        {
+            Debug.Log("불러오기 실패");
+        }
+        b_isNextScene = true;
+        g_WarningPanel.SetActive(false);
+    }
+
+    public void SaveCloud()
+    {
+        if (b_OffLoad)
+        {
+            if (!Save_Load.instance.b_isTestReset)
+            {
+#if UNITY_ANDROID
+                if (PlayGamesPlatform.Instance.localUser.authenticated)
+                {
+                    PlayGamesPlatform.Instance.SavedGame.OpenWithAutomaticConflictResolution(s_Data, DataSource.ReadCacheOrNetwork, ConflictResolutionStrategy.UseLastKnownGood, SaveGame);
+
+                }
+
+#elif UNITY_IOS
+
+
+#endif
+            }
+        }
+    }
+
+    public void SaveGame(SavedGameRequestStatus status, ISavedGameMetadata game)
+    {
+        if (status == SavedGameRequestStatus.Success)
+        {
+            string Data = JsonUtility.ToJson(Save_Load.instance.s_Data);
+            var update = new SavedGameMetadataUpdate.Builder().Build();
+            byte[] bytes = Encoding.UTF8.GetBytes(Data);
+#if UNITY_ANDROID
+            PlayGamesPlatform.Instance.SavedGame.CommitUpdate(game, update, bytes, SaveData);
+
+#elif UNITY_IOS
+
+            Debug.Log("ef22");
+
+#endif
+        }
+        else
+        {
+            if (!Save_Load.instance.b_isTestReset)
+                SaveCloud();
+        }
+    }
+
+    void SaveData(SavedGameRequestStatus status, ISavedGameMetadata game)
+    {
+        if (status == SavedGameRequestStatus.Success)
+        {
+            if (IAPManager_Scr.instance != null)
+            {
+                IAPManager_Scr.instance.saveReceipt();
+            }
+            if (!Save_Load.instance.b_isTestReset)
+                SaveCloud();
+        }
+        else print("저장 실패");
+    }
+
+    public void DeleteCloud()
+    {
+#if UNITY_ANDROID
+        if (PlayGamesPlatform.Instance.localUser.authenticated)
+        {
+            PlayGamesPlatform.Instance.SavedGame.OpenWithAutomaticConflictResolution(s_Data,
+            DataSource.ReadCacheOrNetwork, ConflictResolutionStrategy.UseLongestPlaytime, DeleteGame);
+        }
+
+#elif UNITY_IOS
+
+
+#endif
+    }
+
+    void DeleteGame(SavedGameRequestStatus status, ISavedGameMetadata game)
+    {
+        if (status == SavedGameRequestStatus.Success)
+        {
+#if UNITY_ANDROID
+            PlayGamesPlatform.Instance.SavedGame.Delete(game);
+
+#elif UNITY_IOS
+
+            Debug.Log("ef22");
+
+#endif
+        }
+        else print("삭제 실패");
+    }
+
+    public void LogOut()
+    {
+#if UNITY_ANDROID
+        ((PlayGamesPlatform)Social.Active).SignOut();
+
+#elif UNITY_IOS
+
+        Debug.Log("ef22");
+
+#endif
+    }
+
+    #region 업적_레벨
+
+#if UNITY_ANDROID
+    public void GetAchievementLV10()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_10, 100, (bool success) => { });
+    }
+    public void GetAchievementLV50()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_50, 100, (bool success) => { });
+    }
+    public void GetAchievementLV100()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_100, 100, (bool success) => { });
+    }
+    public void GetAchievementLV200()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_200, 100, (bool success) => { });
+    }
+    public void GetAchievementLV300()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_300, 100, (bool success) => { });
+    }
+    public void GetAchievementLV400()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_400, 100, (bool success) => { });
+    }
+    public void GetAchievementLV500()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_500, 100, (bool success) => { });
+    }
+    public void GetAchievementLV600()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_600, 100, (bool success) => { });
+    }
+    public void GetAchievementLV700()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_700, 100, (bool success) => { });
+    }
+    public void GetAchievementLV800()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_800, 100, (bool success) => { });
+    }
+    public void GetAchievementLV900()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_900, 100, (bool success) => { });
+    }
+    public void GetAchievementLVMAX()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_reach_level_max, 100, (bool success) => { });
+    }
+
+#elif UNITY_IOS
+
+
+#endif
+    #endregion
+
+    #region 업적_스테이지
+
+#if UNITY_ANDROID
+    public void GetAchievementStage10()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_10_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStage50()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_50_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStage100()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_100_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStage200()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_200_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStage300()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_300_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStage400()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_400_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStage500()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_500_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStage600()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_600_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStage700()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_700_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStage800()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_800_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStage900()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_stage_900_clear, 100, (bool success) => { });
+    }
+    public void GetAchievementStageALL()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_all_stage_clear, 100, (bool success) => { });
+    }
+
+#elif UNITY_IOS
+
+
+#endif
+    #endregion
+
+    #region 업적_자판기
+    // 자판기 갯수별 획득
+
+#if UNITY_ANDROID
+
+    public void GetAchievementMachineOne()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_get_1_vending_machine, 100, (bool success) => { });
+    }
+    public void GetAchievementMachineTwo()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_get_2_vending_machine, 100, (bool success) => { });
+    }
+    public void GetAchievementMachineThree()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_get_3_vending_machine, 100, (bool success) => { });
+    }
+    public void GetAchievementMachineFour()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_get_4_vending_machine, 100, (bool success) => { });
+    }
+    public void GetAchievementMachineFive()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_get_5_vending_machine, 100, (bool success) => { });
+    }
+    public void GetAchievementMachineSix()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_get_6_vending_machine, 100, (bool success) => { });
+    }
+#elif UNITY_IOS
+
+
+#endif
+    #endregion
+
+    #region 업적_최초
+    // 랭킹전 최초 진입
+
+
+#if UNITY_ANDROID
+    public void GetAchievementFirstRankingMode()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_ranking_match_first_entry, 100, (bool success) => { });
+    }
+
+    // 일용직 첫 강화
+    public void GetAchievementFirstDailyJob()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_daily_employee_first_upgrade_success, 100, (bool success) => { });
+    }
+    // 알바 첫 강화
+    public void GetAchievementFirstAlba()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_parttime_worker_first_upgrade_success, 100, (bool success) => { });
+    }
+    // 인턴 첫 강화
+    public void GetAchievementFirstIntern()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_intern_first_upgrade_success, 100, (bool success) => { });
+    }
+    // 계약직 첫 강화
+    public void GetAchievementFirstContract()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_contract_worker_first_upgrade_success, 100, (bool success) => { });
+    }
+    // 정규직 첫 강화
+    public void GetAchievementFirstRegular()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_permanent_employee_first_upgrade_success, 100, (bool success) => { });
+    }
+    // 정직원 강화 맥스치 달성
+    public void GetAchievementFirstEmployeeMax()
+    {
+        PlayGamesPlatform.Instance.ReportProgress(GPGSIds.achievement_staff_level_max_first_upgrade_success, 100, (bool success) => { });
+    }
+
+
+#elif UNITY_IOS
+
+
+#endif
+
+    #endregion
+
+    public void ShowAchievements()
+    {
+        SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+
+#if UNITY_ANDROID
+        if (b_isLogin)
+            PlayGamesPlatform.Instance.ShowAchievementsUI();
+
+#elif UNITY_IOS
+
+
+#endif
+    }
+
+    public void SetLeaderBoardScore(int _Score)
+    {
+        if (b_isLogin)
+        {
+#if UNITY_ANDROID
+            PlayGamesPlatform.Instance.ReportScore(_Score, GPGSIds.leaderboard_rankingpoint, (bool success) =>
+            {
+                if (success)
+                {
+                    print("점수 등록 성공");
+                }
+                else
+                {
+                    print("점수 등록 실패");
+                }
+            }
+            );
+
+#elif UNITY_IOS
+
+
+#endif
+        }
+        else
+        {
+            i_RankingPoint = _Score;
+        }
+    }
+
+    public void ShowLeaderBoard()
+    {
+        SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+#if UNITY_ANDROID
+        if (b_isLogin)
+            PlayGamesPlatform.Instance.ShowLeaderboardUI();
+
+#elif UNITY_IOS
+
+
+#endif
+    }
+
+    public void ShareGame()
+    {
+        SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+        StartCoroutine(TakeSSAndShare());
+        /*
+#if UNITY_ANDROID && !UNITY_EDITOR
+		AndroidJavaClass intentClass = new AndroidJavaClass("android.content.Intent");
+		AndroidJavaObject intentObject = new AndroidJavaObject("android.content.Intent");
+		intentObject.Call<AndroidJavaObject>("setAction", intentClass.GetStatic<string>("ACTION_SEND"));
+		intentObject.Call<AndroidJavaObject>("setType", "text/plain");
+		intentObject.Call<AndroidJavaObject>("putExtra", intentClass.GetStatic<string>("EXTRA_SUBJECT"), subject);
+		intentObject.Call<AndroidJavaObject>("putExtra", intentClass.GetStatic<string>("EXTRA_TEXT"), body);
+		AndroidJavaClass unity = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+		AndroidJavaObject currentActivity = unity.GetStatic<AndroidJavaObject>("currentActivity");
+		AndroidJavaObject jChooser = intentClass.CallStatic<AndroidJavaObject>("createChooser", intentObject, "Share Via");
+		currentActivity.Call("startActivity", jChooser);
+#endif*/
+    }
+
+    private IEnumerator TakeSSAndShare()
+    {
+        yield return new WaitForEndOfFrame();
+
+
+
+        //new NativeShare().SetTitle("Company Strike!").SetSubject("회사에서 받는 스트레스.. 푸는 방법은?").SetText("직장상사들을 혼내보자!").AddFile(t_ShareImage).Share();
+        new NativeShare().SetUrl("https://play.google.com/store/apps/details?id=com.DefaultCompany.CompanyStrike").Share();
+    }
+}

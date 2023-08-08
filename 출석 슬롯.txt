@@ -1,0 +1,150 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using System.Globalization;
+
+public class AttendanceSlot_Scr : MonoBehaviour
+{
+    public GameObject g_GetButton;
+
+    public Image i_Icon;
+    public Sprite[] s_Icon; // 0 코인, 1 젬, 2 FAIL
+    public Text t_Reward;
+    public Text t_Day;
+    public DateTimeOffset d_Day;
+
+    public int i_slotNum;
+
+    public bool b_Absent;   // 당일날 출석을 안찍음
+    public bool b_Attendance;
+    public bool b_GetReward;    // 이미 보상을 받음
+    public bool b_PerfectReward = false;
+    string tmp;
+
+
+    private void LateUpdate()
+    {
+        TranslateManager_Scr.instance.ChangeFont(t_Day);
+    }
+
+    public void ResetSlot()
+    {
+        if (!b_PerfectReward)
+        {
+            tmp = TranslateManager_Scr.instance.TranslateContext(101).Replace("N", (i_slotNum + 1).ToString());
+
+            t_Day.text = tmp;
+            tmp = (20 * (i_slotNum + 1)).ToString();
+            t_Reward.text = tmp;
+            i_Icon.sprite = s_Icon[0];
+            b_Absent = false;
+            b_Attendance = false;
+            b_GetReward = false;
+        }
+        else
+        {
+            tmp = TranslateManager_Scr.instance.TranslateContext(102).Replace("N", (i_slotNum + 1).ToString());
+
+            t_Day.text = tmp;
+            t_Reward.text = 5.ToString();
+            i_Icon.sprite = s_Icon[1];
+            b_GetReward = false;
+        }
+    }
+
+    public void Reward(DateTimeOffset _Day)
+    {
+        if (!b_PerfectReward)
+        {
+            if ((_Day.Year == d_Day.Year && _Day.Month == d_Day.Month && _Day.Day == d_Day.Day))
+            {
+                b_Attendance = true;
+            }
+            else if (!b_Attendance && !(d_Day >= _Day))
+            {
+                b_Absent = true;
+            }
+        }
+        LoadIcon();
+    }
+    public void LoadIcon()
+    {
+        if (!b_PerfectReward)
+        {
+            tmp = TranslateManager_Scr.instance.TranslateContext(101).Replace("N", (i_slotNum + 1).ToString());
+
+            t_Day.text = tmp;
+            tmp = (20 * (i_slotNum + 1)).ToString();
+            t_Reward.text = tmp;
+
+            if (b_Absent)
+            {
+                i_Icon.sprite = s_Icon[2];
+                t_Reward.gameObject.SetActive(false);
+                g_GetButton.SetActive(false);
+            }
+            else if (b_Attendance && !b_GetReward)
+            {
+                i_Icon.sprite = s_Icon[0];
+                t_Reward.text = (20 * (i_slotNum + 1)).ToString();
+                g_GetButton.SetActive(true);
+            }
+            else if (b_Attendance && b_GetReward)
+            {
+                // 색 바꾸기
+                i_Icon.color = new Color(80 / 255f, 80 / 255f, 80 / 255f);
+                t_Reward.text = (20 * (i_slotNum + 1)).ToString();
+                g_GetButton.SetActive(false);
+            }
+        }
+        else
+        {
+            tmp = TranslateManager_Scr.instance.TranslateContext(102);
+
+            t_Day.text = tmp;
+            t_Reward.text = 5.ToString();
+            i_Icon.sprite = s_Icon[1];
+
+            if (b_GetReward)
+            {
+                // 색바꾸기
+                i_Icon.color = new Color(80 / 255f, 80 / 255f, 80 / 255f);
+                g_GetButton.SetActive(false);
+            }
+        }
+    }
+
+    public void GetGemReward(bool success)
+    {
+        if (success)
+        {
+            if (!b_GetReward)
+            {
+                i_Icon.sprite = s_Icon[1];
+                g_GetButton.SetActive(true);
+            }
+        }
+        else
+        {
+            i_Icon.sprite = s_Icon[2];
+            t_Reward.gameObject.SetActive(false);
+            g_GetButton.SetActive(false);
+        }
+    }
+
+    public void OnClickGetReward()
+    {
+        SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+        b_GetReward = true;
+        if (!b_PerfectReward)
+            GoldManager_Scr.instance.i_Coin += (20 * (i_slotNum + 1));
+        else
+            GoldManager_Scr.instance.i_Gem += 5;
+
+        // 색 바꾸기
+        i_Icon.color = new Color(80 / 255f, 80 / 255f, 80 / 255f);
+        g_GetButton.SetActive(false);
+    }
+}

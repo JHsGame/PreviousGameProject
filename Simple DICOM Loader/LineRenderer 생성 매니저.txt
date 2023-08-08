@@ -1,0 +1,177 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class LineRendererTest : MonoBehaviour
+{
+    [SerializeField]
+    Camera camera;
+    [SerializeField]
+    LineRenderer line;
+    [SerializeField]
+    Vector3 mousePos;
+    [SerializeField]
+    Vector3 startPos;
+    [SerializeField]
+    Vector3 endPos;
+
+    [SerializeField]
+    Image createButton;
+    [SerializeField]
+    Image deleteButton;
+
+    float dis_cmVer;
+
+    public bool isOnUI;
+    public bool isCreate;
+    public bool isDelete;
+
+    void Update()
+    {
+        if (isCreate && !isOnUI)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (line == null)
+                    CreateLine();
+                mousePos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, 99.9f);
+                mousePos = camera.ScreenToWorldPoint(mousePos);
+                line.SetPosition(0, mousePos);
+                line.SetPosition(1, mousePos);
+                startPos = mousePos;
+            }
+            else if (Input.GetMouseButtonUp(0) && line)
+            {
+                if (line)
+                {
+                    mousePos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, 99.9f);
+                    mousePos = camera.ScreenToWorldPoint(mousePos);
+                    line.SetPosition(1, mousePos);
+                    endPos = mousePos;
+                    addColliderToLine();
+                    line = null;
+                    dis_cmVer = Vector3.Distance(startPos, endPos);
+                    dis_cmVer *= 0.254f;
+                    print(dis_cmVer);
+                }
+            }
+            else if (Input.GetMouseButton(0))
+            {
+                if (line)
+                {
+                    mousePos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, 99.9f);
+                    mousePos = camera.ScreenToWorldPoint(mousePos);
+                    line.SetPosition(1, mousePos);
+                }
+            }
+        }
+
+        if (isDelete)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit, Mathf.Infinity))
+                {
+                    if (hit.collider.transform.parent.GetComponent<LineRenderer>())
+                    {
+                        Destroy(hit.collider.transform.parent.gameObject);
+                    }
+                }
+            }
+        }
+
+        ReloadUI();
+    }
+
+    void ReloadUI()
+    {
+        if (isCreate)
+        {
+            createButton.color = new Color(255f / 255f, 255f / 255f, 255f / 255f, 125f / 255f);
+        }
+        else
+        {
+            line = null;
+            createButton.color = new Color(255f / 255f, 255f / 255f, 255f / 255f, 255f / 255f);
+        }
+
+        if (isDelete)
+        {
+            deleteButton.color = new Color(255f / 255f, 255f / 255f, 255f / 255f, 125f / 255f);
+        }
+        else
+        {
+            deleteButton.color = new Color(255f / 255f, 255f / 255f, 255f / 255f, 255f / 255f);
+        }
+    }
+
+    public void MouseOnUI()
+    {
+        if (line != null)
+            line = null;
+        isOnUI = true;
+    }
+
+    public void MouseLeaveUI()
+    {
+        isOnUI = false;
+    }
+
+    public void OnClickCreateMode()
+    {
+        if (isDelete)
+            isDelete = false;
+
+        isCreate = !isCreate;
+    }
+
+    public void OnClickDeleteMode()
+    {
+        if (isCreate)
+            isCreate = false;
+
+        isDelete = !isDelete;
+    }
+
+    void CreateLine()
+    {
+        GameObject parent = GameObject.Find("LineParent");
+        line = new GameObject("Line").AddComponent<LineRenderer>().GetComponent<LineRenderer>();
+        line.transform.parent = parent.transform;
+        line.material = Resources.Load("Test") as Material;
+        line.material.SetColor("_Color", Color.red);
+        line.startWidth = 1f;
+        line.endWidth = 1f;
+        line.useWorldSpace = true;
+        line.GetComponent<LineRenderer>().generateLightingData = true;
+    }
+
+    void addColliderToLine()
+    {
+        BoxCollider col = new GameObject("Collider").AddComponent<BoxCollider>();
+
+        float lineLength = Vector3.Distance(startPos, endPos);
+        Vector3 midPoint = (startPos + endPos) / 2;
+        col.transform.position = midPoint;
+        float angle = (Mathf.Abs(startPos.y - endPos.y) / Mathf.Abs(startPos.x - endPos.x));
+        if(startPos.y < endPos.y && startPos.x > endPos.x || (endPos.y < startPos.y && endPos.x > startPos.x))
+        {
+            angle *= -1;
+        }
+
+        if(angle != angle)
+        {
+            Destroy(line.gameObject);
+        }
+        else
+        {
+            angle = Mathf.Rad2Deg * Mathf.Atan(angle);
+            col.transform.Rotate(0, 0, angle);
+        }
+        col.size = new Vector3(lineLength, 1, 1);
+        col.transform.parent = line.transform;
+    }
+}

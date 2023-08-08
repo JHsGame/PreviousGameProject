@@ -1,0 +1,75 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class InGameCashingManager_Scr : MonoBehaviour
+{
+    private static InGameCashingManager_Scr instance;
+
+    [SerializeField]
+    private GameObject G_RewardCanvas;
+    [SerializeField]
+    private GameObject G_OptionPanel;
+    [SerializeField]
+    private GameObject g_Option;
+    [SerializeField]
+    private GameObject[] g_Char = new GameObject[24];
+    [SerializeField]
+    private GameObject[] g_AIBot = new GameObject[0];
+    [SerializeField]
+    private GameObject g_AISpwan;
+    [SerializeField]
+    private GameObject g_PlayerSpwan;
+
+    [SerializeField]
+    private Text t_Lefttime;
+    [SerializeField]
+    private Text t_Name;
+    [SerializeField]
+    private Text t_Rank;
+    [SerializeField]
+    private Text t_Reward;
+
+    [SerializeField]
+    private bool b_GameEnd;
+    [SerializeField]
+    private bool b_Load;
+
+    public static InGameCashingManager_Scr Instance
+    {
+        get
+        {
+            if (instance != null)
+            {
+                return instance;
+            }
+            else
+                return null;
+        }
+    }
+
+    private void Awake()
+    {
+        if (instance != null)
+            return;
+        else
+        {
+            instance = this;
+        }
+    }
+
+    public GameObject RewardCanvas { get => G_RewardCanvas; }
+    public GameObject OptionPanel { get => G_OptionPanel; }
+    public GameObject Option { get => g_Option; }
+    public GameObject[] PlayerCharacter { get => g_Char; }
+    public GameObject[] AICharacter { get => g_AIBot; }
+    public GameObject PlayerSpwanPos { get => g_PlayerSpwan; }
+    public GameObject AISpwanPos { get => g_AISpwan; }
+    public Text Name { get => t_Name; }
+    public Text LeftTime { get => t_Lefttime; }
+    public Text Rank { get => t_Rank; }
+    public Text Reward { get => t_Reward; }
+    public bool EndFlag { get => b_GameEnd; set => b_GameEnd = value; }
+    public bool Load { get => b_Load; set => b_Load = value; }
+}

@@ -1,0 +1,80 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class InGameManager_Scr : MonoBehaviour
+{
+    private static InGameManager_Scr instance;
+    InGameCashingManager_Scr cashing;
+
+    public static InGameManager_Scr Instance
+    {
+        get
+        {
+            if (instance != null)
+            {
+                return instance;
+            }
+            else
+                return null;
+        }
+    }
+
+    private void Awake()
+    {
+        if (instance != null)
+            return;
+        else
+        {
+            instance = this;
+        }
+    }
+
+    private void Start()
+    {
+        cashing = InGameCashingManager_Scr.Instance;
+        int selectNum = GameObject.Find("SaveFile").GetComponent<SaveLoad>().i_CharNum;
+        CharacterSpwan(selectNum);
+    }
+
+    public void CharacterSpwan(int Num)
+    {
+        // 포톤으로 생성하기
+        /*string objName = g_Char[Num - 1].gameObject.name;
+        objName = "Prefabs/Player/" + objName;
+        GameObject obj = PhotonNetwork.Instantiate(objName, g_SpwanPos.transform.position, g_SpwanPos.transform.rotation);*/
+
+        for (int i = 0; i < cashing.PlayerSpwanPos.transform.childCount; i++)
+        {
+            cashing.PlayerSpwanPos.transform.GetChild(i).gameObject.SetActive(false);
+        }
+
+        GameObject obj = Instantiate(cashing.PlayerCharacter[Num - 1], cashing.PlayerSpwanPos.transform.position, cashing.PlayerSpwanPos.transform.rotation);
+        obj.transform.parent = cashing.PlayerSpwanPos.transform;
+
+        for (int i = 0; i < cashing.AISpwanPos.transform.childCount; i++)
+        {
+            int randomAI = Random.Range(0, cashing.AICharacter.Length);
+
+            Instantiate(cashing.AICharacter[randomAI], cashing.AISpwanPos.transform.GetChild(i).position, cashing.AISpwanPos.transform.GetChild(i).rotation);
+        }
+        cashing.AISpwanPos.SetActive(false);
+    }
+
+    public IEnumerator LoadScene()
+    {
+        AsyncOperation playerScene = SceneManager.LoadSceneAsync(1);
+        playerScene.allowSceneActivation = false;
+
+        while (!playerScene.isDone)
+        {
+            if (playerScene.progress >= 0.9f)
+            {
+                playerScene.allowSceneActivation = true;
+                break;
+            }
+            yield return CashingCoroutine_Scr.WaitForEndOfFrame; ;
+        }
+    }
+}

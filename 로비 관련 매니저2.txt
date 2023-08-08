@@ -1,0 +1,232 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class LobbyManager_Scr : MonoBehaviour
+{
+    private static LobbyManager_Scr instance;
+
+    private int i_CharNum = 1;
+    private string s_userNickName;
+
+    [SerializeField]
+    private TextAsset myTxt;
+    [SerializeField]
+    private List<Dictionary<string, object>> CharacterData;
+
+    float f_MaxStat;
+    float f_SelectStat;
+    int i_MaxStat;
+    int i_SelectStat;
+    string tmpstring;
+
+    public int CharNum { get => i_CharNum; set => i_CharNum = value; }
+    public string NickName { get => s_userNickName; set => s_userNickName = value; }
+
+    private void Awake()
+    {
+        if (instance != null)
+            return;
+        else
+            instance = this;
+    }
+
+    public static LobbyManager_Scr Instance
+    {
+        get
+        {
+            if (null == instance)
+                return null;
+            return instance;
+        }
+    }
+
+    void Start()
+    {
+        if (myTxt != null)
+            CharacterData = CSVReader.Read(myTxt);
+
+        i_CharNum = GameObject.Find("SaveFile").GetComponent<SaveLoad>().i_CharNum;
+        s_userNickName = GameObject.Find("SaveFile").GetComponent<SaveLoad>().s_NickName;
+
+        ReLoadStatUI();
+    }
+
+    public void ReLoadStatUI()
+    {
+        for (int i = 0; i < LobbyCashingManager_Scr.Instance.Character.transform.childCount; ++i)
+        {
+            if ((i_CharNum - 1) == i)
+                LobbyCashingManager_Scr.Instance.Character.transform.GetChild(i).gameObject.SetActive(true);
+            else
+                LobbyCashingManager_Scr.Instance.Character.transform.GetChild(i).gameObject.SetActive(false);
+        }
+
+        GameObject.Find("SaveFile").GetComponent<SaveLoad>().s_NickName = LobbyCashingManager_Scr.Instance.Name.transform.GetChild(0).GetComponent<Text>().text;
+
+        #region 왼쪽 스텟창
+        tmpstring = CharacterData[i_CharNum - 1]["성향"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[0].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+
+        tmpstring = CharacterData[i_CharNum - 1]["무기"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[1].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+
+        tmpstring = CharacterData[i_CharNum - 1]["탄환"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[2].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+
+        tmpstring = CharacterData[i_CharNum - 1]["공격타입"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[3].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+
+        tmpstring = CharacterData[i_CharNum - 1]["탄속성"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[4].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+
+        tmpstring = CharacterData[i_CharNum - 1]["행동기"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[5].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+
+        tmpstring = CharacterData[i_CharNum - 1]["연사 개수"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[6].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+
+        tmpstring = CharacterData[i_CharNum - 1]["방향 분리"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[7].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+        #endregion
+
+        #region 오른쪽 스텟창
+        tmpstring = CharacterData[i_CharNum - 1]["체력"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[8].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+        i_MaxStat = 0;
+        for (int i = 0; i < 24; i++)
+        {
+            int tmp = (int)CharacterData[i]["체력"];
+            if (i_MaxStat <= tmp)
+            {
+                i_MaxStat = tmp;
+            }
+        }
+        i_SelectStat = (int)CharacterData[i_CharNum - 1]["체력"];
+        LobbyCashingManager_Scr.Instance.Stats[8].transform.GetChild(2).GetChild(0).GetComponent<Image>().fillAmount = i_SelectStat / (float)i_MaxStat;
+
+        tmpstring = CharacterData[i_CharNum - 1]["공격력"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[9].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+        i_MaxStat = 0;
+        for (int i = 0; i < 24; i++)
+        {
+            int tmp = (int)CharacterData[i]["공격력"];
+            if (i_MaxStat <= tmp)
+            {
+                i_MaxStat = tmp;
+            }
+        }
+        i_SelectStat = (int)CharacterData[i_CharNum - 1]["공격력"];
+        LobbyCashingManager_Scr.Instance.Stats[9].transform.GetChild(2).GetChild(0).GetComponent<Image>().fillAmount = i_SelectStat / (float)i_MaxStat;
+
+        tmpstring = CharacterData[i_CharNum - 1]["공격속도"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[10].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+        f_MaxStat = 0;
+        for (int i = 0; i < 24; i++)
+        {
+            float tmp = float.Parse(CharacterData[i]["공격속도"].ToString());
+            if (f_MaxStat <= tmp)
+            {
+                f_MaxStat = tmp;
+            }
+        }
+        f_SelectStat = float.Parse(CharacterData[i_CharNum - 1]["공격속도"].ToString());
+        LobbyCashingManager_Scr.Instance.Stats[10].transform.GetChild(2).GetChild(0).GetComponent<Image>().fillAmount = f_SelectStat / f_MaxStat;
+
+        tmpstring = CharacterData[i_CharNum - 1]["사정거리"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[11].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+        f_MaxStat = 0;
+        for (int i = 0; i < 24; i++)
+        {
+            float tmp = float.Parse(CharacterData[i]["사정거리"].ToString());
+            if (f_MaxStat <= tmp)
+            {
+                f_MaxStat = tmp;
+            }
+        }
+        f_SelectStat = float.Parse(CharacterData[i_CharNum - 1]["사정거리"].ToString());
+        LobbyCashingManager_Scr.Instance.Stats[11].transform.GetChild(2).GetChild(0).GetComponent<Image>().fillAmount = f_SelectStat / f_MaxStat;
+
+        tmpstring = CharacterData[i_CharNum - 1]["이동 속도"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[12].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+        f_MaxStat = 0;
+        for (int i = 0; i < 24; i++)
+        {
+            float tmp = float.Parse(CharacterData[i]["이동 속도"].ToString());
+            if (f_MaxStat <= tmp)
+            {
+                f_MaxStat = tmp;
+            }
+        }
+        f_SelectStat = float.Parse(CharacterData[i_CharNum - 1]["이동 속도"].ToString());
+        LobbyCashingManager_Scr.Instance.Stats[12].transform.GetChild(2).GetChild(0).GetComponent<Image>().fillAmount = f_SelectStat / f_MaxStat;
+
+        tmpstring = CharacterData[i_CharNum - 1]["무기 에너지"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[13].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+        f_MaxStat = 0;
+        for (int i = 0; i < 24; i++)
+        {
+            float tmp = float.Parse(CharacterData[i]["무기 에너지"].ToString());
+            if (f_MaxStat <= tmp)
+            {
+                f_MaxStat = tmp;
+            }
+        }
+        f_SelectStat = float.Parse(CharacterData[i_CharNum - 1]["무기 에너지"].ToString());
+        LobbyCashingManager_Scr.Instance.Stats[13].transform.GetChild(2).GetChild(0).GetComponent<Image>().fillAmount = f_SelectStat / f_MaxStat;
+
+        tmpstring = CharacterData[i_CharNum - 1]["회복력"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[14].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+        f_MaxStat = 0;
+        for (int i = 0; i < 24; i++)
+        {
+            float tmp = float.Parse(CharacterData[i]["회복력"].ToString());
+            if (f_MaxStat <= tmp)
+            {
+                f_MaxStat = tmp;
+            }
+        }
+        f_SelectStat = float.Parse(CharacterData[i_CharNum - 1]["회복력"].ToString());
+        LobbyCashingManager_Scr.Instance.Stats[14].transform.GetChild(2).GetChild(0).GetComponent<Image>().fillAmount = f_SelectStat / f_MaxStat;
+
+        tmpstring = CharacterData[i_CharNum - 1]["무기 속도"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[15].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+        f_MaxStat = 0f;
+        for (int i = 0; i < 24; i++)
+        {
+            float tmp = float.Parse(CharacterData[i]["무기 속도"].ToString());
+            if (f_MaxStat <= tmp)
+            {
+                f_MaxStat = tmp;
+            }
+        }
+        f_SelectStat = float.Parse(CharacterData[i_CharNum - 1]["무기 속도"].ToString());
+        LobbyCashingManager_Scr.Instance.Stats[15].transform.GetChild(2).GetChild(0).GetComponent<Image>().fillAmount = f_SelectStat / f_MaxStat;
+        #endregion
+
+        tmpstring = CharacterData[i_CharNum - 1]["네임"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[16].transform.GetChild(0).GetComponent<Text>().text = tmpstring;
+
+        tmpstring = CharacterData[i_CharNum - 1]["스킬명"].ToString() + " : " + CharacterData[i_CharNum - 1]["스킬 설명"].ToString();
+        LobbyCashingManager_Scr.Instance.Stats[17].transform.GetChild(1).GetComponent<Text>().text = tmpstring;
+        GameObject.Find("SaveFile").GetComponent<SaveLoad>().i_CharNum = i_CharNum;
+    }
+
+    public IEnumerator LoadScene()
+    {
+        AsyncOperation playerScene = SceneManager.LoadSceneAsync(2);
+        playerScene.allowSceneActivation = false;
+
+        while (!playerScene.isDone)
+        {
+            if (playerScene.progress >= 0.9f)
+            {
+                playerScene.allowSceneActivation = true;
+                break;
+            }
+            yield return null;
+        }
+    }
+}

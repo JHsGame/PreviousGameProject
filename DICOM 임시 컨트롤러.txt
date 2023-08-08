@@ -1,0 +1,180 @@
+using UnityEngine;
+
+public class TestController : MonoBehaviour
+{
+    [SerializeField]
+    private GameObject myVolume;
+    [SerializeField]
+    private GameObject mySTL;
+
+    [SerializeField]
+    private GameObject minX;
+    [SerializeField]
+    private GameObject minY;
+    [SerializeField]
+    private GameObject minZ;
+
+    [SerializeField]
+    private GameObject maxX;
+    [SerializeField]
+    private GameObject maxY;
+    [SerializeField]
+    private GameObject maxZ;
+
+    private GameObject minAxis;
+    private GameObject maxAxis;
+
+    public Texture3D texture;
+
+    myAxis axis = new myAxis();
+
+    private void Update()
+    {
+        if (Input.GetKey(KeyCode.A))
+        {
+            LowPosition(false);
+        }
+
+        if (Input.GetKey(KeyCode.D))
+        {
+            LowPosition(true);
+        }
+
+        if (Input.GetKey(KeyCode.Q))
+        {
+            HighPosition(false);
+        }
+
+        if (Input.GetKey(KeyCode.E))
+        {
+            HighPosition(true);
+        }
+    }
+
+    public void OnClickAxis(string str)
+    {
+        switch (str)
+        {
+            case "X":
+                axis = myAxis.X;
+                break;
+            case "Y":
+                axis = myAxis.Y;
+                break;
+            case "Z":
+                axis = myAxis.Z;
+                break;
+            default:
+                break;
+        }
+    }
+    public void LowPosition(bool isPlus)
+    {
+        switch (axis)
+        {
+            case myAxis.X:
+                if (isPlus && minX.transform.localPosition.x <= maxX.transform.localPosition.x)
+                {
+                    minX.transform.localPosition = new Vector3(minX.transform.localPosition.x + 0.1f, minX.transform.localPosition.y, minX.transform.localPosition.z);
+                }
+                else if (!isPlus && minX.transform.localPosition.x >= -3f)
+                {
+                    minX.transform.localPosition = new Vector3(minX.transform.localPosition.x - 0.1f, minX.transform.localPosition.y, minX.transform.localPosition.z);
+                }
+
+                break;
+            case myAxis.Y:
+                if (isPlus && minY.transform.localPosition.y <= maxY.transform.localPosition.y)
+                {
+                    minY.transform.localPosition = new Vector3(minY.transform.localPosition.x, minY.transform.localPosition.y + 0.1f, minY.transform.localPosition.z);
+                }
+                else if (!isPlus && minY.transform.localPosition.y >= -3f)
+                {
+                    minY.transform.localPosition = new Vector3(minY.transform.localPosition.x, minY.transform.localPosition.y - 0.1f, minY.transform.localPosition.z);
+                }
+                break;
+            case myAxis.Z:
+                if (isPlus && minZ.transform.localPosition.z <= maxZ.transform.localPosition.z)
+                {
+                    minZ.transform.localPosition = new Vector3(minZ.transform.localPosition.x, minZ.transform.localPosition.y, minZ.transform.localPosition.z + 0.1f);
+                }
+                else if (!isPlus && minZ.transform.localPosition.z >= -3f)
+                {
+                    minZ.transform.localPosition = new Vector3(minZ.transform.localPosition.x, minZ.transform.localPosition.y, minZ.transform.localPosition.z - 0.1f);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void HighPosition(bool isPlus)
+    {
+        switch (axis)
+        {
+            case myAxis.X:
+                if (isPlus && maxX.transform.localPosition.x <= 3)
+                {
+                    maxX.transform.localPosition = new Vector3(maxX.transform.localPosition.x + 0.1f, maxX.transform.localPosition.y, maxX.transform.localPosition.z);
+                }
+                else if (!isPlus && maxX.transform.localPosition.x >= minX.transform.localPosition.x)
+                {
+                    maxX.transform.localPosition = new Vector3(maxX.transform.localPosition.x - 0.1f, maxX.transform.localPosition.y, maxX.transform.localPosition.z);
+                }
+                break;
+            case myAxis.Y:
+                if (isPlus && maxY.transform.localPosition.y <= 3)
+                {
+                    maxY.transform.localPosition = new Vector3(maxY.transform.localPosition.x, maxY.transform.localPosition.y + 0.1f, maxY.transform.localPosition.z);
+                }
+                else if (!isPlus && maxY.transform.localPosition.y >= minY.transform.localPosition.y)
+                {
+                    maxY.transform.localPosition = new Vector3(maxY.transform.localPosition.x, maxY.transform.localPosition.y - 0.1f, maxY.transform.localPosition.z);
+                }
+                break;
+            case myAxis.Z:
+                if (isPlus && maxZ.transform.localPosition.z <= 3)
+                {
+                    maxZ.transform.localPosition = new Vector3(maxZ.transform.localPosition.x, maxZ.transform.localPosition.y, maxZ.transform.localPosition.z + 0.1f);
+                }
+                else if (!isPlus && maxZ.transform.localPosition.z >= minZ.transform.localPosition.z)
+                {
+                    maxZ.transform.localPosition = new Vector3(maxZ.transform.localPosition.x, maxZ.transform.localPosition.y, maxZ.transform.localPosition.z - 0.1f);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void ChangeTexture(Texture3D _texture)
+    {
+        Material material = myVolume.GetComponent<MeshRenderer>().material;
+        texture = _texture;
+        material.SetTexture("_Volume", texture);
+        //texture = AssetDatabase.LoadAssetAtPath(path, typeof(Texture3D)) as Texture3D;
+        //texture.UpdateExternalTexture(Application.persistentDataPath + @path);
+        //texture = (Texture3D)((Application.persistentDataPath + @path) as object);
+    }
+
+    public void OnClickVolumeOnOff()
+    {
+        if (myVolume.activeSelf)
+            myVolume.SetActive(false);
+        else
+            myVolume.SetActive(true);
+    }
+
+    public void OnClickSTLOnOff()
+    {
+        if (mySTL.activeSelf)
+            mySTL.SetActive(false);
+        else
+            mySTL.SetActive(true);
+    }
+}
+
+public enum myAxis
+{
+    X, Y, Z
+}

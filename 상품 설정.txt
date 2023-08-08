@@ -1,0 +1,141 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using System.Text;
+using TMPro;
+
+public class ProductStat_Scr : MonoBehaviour
+{
+    enum PRODUCT { NAME, PREMIUM };
+
+    PRODUCT kind;
+
+    public int i_Kind = 0; // 0 = NAME, PREMIUM = 1;
+
+    public GameObject g_ChangeWindow;
+
+    public Text t_Money;
+    public TextMeshProUGUI t_MoneyContext;
+    public TextMeshProUGUI t_Name;
+    public TextMeshProUGUI t_Context;
+    public Text t_BuyButtonText;
+
+    public int i_Cash;
+    public int i_JobNum;    // 몇번째 직책인지
+    public int i_ProductID;
+
+    public bool b_isMiddle;
+    public bool b_isTop;
+
+    public Image i_Profile;
+    public Sprite s_Profile;
+
+    private void Start()
+    {
+        kind = (PRODUCT)i_Kind;
+    }
+
+    private void Update()
+    {
+        ChangeFont();
+        t_Money.text = i_Cash.ToString();
+        i_Profile.sprite = s_Profile;
+        if (TranslateManager_Scr.instance.b_isEnglish || TranslateManager_Scr.instance.b_isIndia || TranslateManager_Scr.instance.b_isItalia || TranslateManager_Scr.instance.b_isGermany
+            || TranslateManager_Scr.instance.b_isFrance || TranslateManager_Scr.instance.b_isVietnam)
+        {
+            t_BuyButtonText.text = TranslateManager_Scr.instance.TranslateData[23]["English"].ToString();
+        }
+        else
+        {
+            t_BuyButtonText.text = TranslateManager_Scr.instance.TranslateData[23][TranslateManager_Scr.instance.s_Language].ToString();
+        }
+
+        if (kind == PRODUCT.NAME)
+        {
+            t_MoneyContext.text = TranslateManager_Scr.instance.TranslateData[33][TranslateManager_Scr.instance.s_Language].ToString();
+            if (b_isMiddle)
+            {
+                t_Name.text = ShopManager_Scr.instance.s_MiddleNameList[i_JobNum];
+            }
+            else if (b_isTop)
+            {
+                t_Name.text = ShopManager_Scr.instance.s_TopNameList[i_JobNum];
+            }
+        }
+        else
+            t_MoneyContext.text = null;
+        if (i_Kind == 1)
+        {
+            if (TranslateManager_Scr.instance.b_isEnglish || TranslateManager_Scr.instance.b_isIndia || TranslateManager_Scr.instance.b_isItalia || TranslateManager_Scr.instance.b_isGermany
+                || TranslateManager_Scr.instance.b_isFrance || TranslateManager_Scr.instance.b_isVietnam)
+                t_Name.text = TranslateManager_Scr.instance.TranslateData[148]["English"].ToString();
+            else
+                t_Name.text = TranslateManager_Scr.instance.TranslateData[148][TranslateManager_Scr.instance.s_Language].ToString();
+        }
+    }
+
+    public void OnBuyNameChange()
+    {
+        SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+
+        if (kind == PRODUCT.NAME)
+        {
+            if (b_isMiddle)
+            {
+                ShopManager_Scr.instance.b_isMiddle = true;
+                ShopManager_Scr.instance.b_isTop = false;
+                ShopManager_Scr.instance.t_ShopJobName.text = ShopManager_Scr.instance.s_MiddleNameList[i_JobNum];
+            }
+            else if (b_isTop)
+            {
+                ShopManager_Scr.instance.b_isMiddle = false;
+                ShopManager_Scr.instance.b_isTop = true;
+                ShopManager_Scr.instance.t_ShopJobName.text = ShopManager_Scr.instance.s_TopNameList[i_JobNum];
+            }
+            for(int i = 0; i < ShopManager_Scr.instance.g_BuyButton.Length; ++i)
+            {
+                ShopManager_Scr.instance.g_BuyButton[i].SetActive(false);
+            }
+            ShopManager_Scr.instance.g_BuyButton[transform.GetSiblingIndex()].SetActive(true);
+            ShopManager_Scr.instance.i_JobNum = i_JobNum;
+            ShopManager_Scr.instance.t_ShopJobName.text = null;
+            ShopManager_Scr.instance.t_ShopJobName.text = string.Concat(t_Name.text, " ");
+            ShopManager_Scr.instance.t_ShopJobName.text = string.Concat(ShopManager_Scr.instance.t_ShopJobName.text + TranslateManager_Scr.instance.TranslateContext(32));
+            if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isChinese || TranslateManager_Scr.instance.b_isJapanese)
+                ShopManager_Scr.instance.g_ChangeWindow.transform.GetChild(4).GetChild(1).GetComponent<Text>().text = TranslateManager_Scr.instance.TranslateContext(36);
+            else
+                ShopManager_Scr.instance.g_ChangeWindow.transform.GetChild(4).GetChild(1).GetComponent<Text>().text = TranslateManager_Scr.instance.TranslateContext(36, "English");
+            for (int i= 0; i < ShopManager_Scr.instance.g_BuyButton.Length; ++i)
+            {
+                ShopManager_Scr.instance.g_BuyButton[i].transform.GetChild(0).GetComponent<Text>().text = TranslateManager_Scr.instance.TranslateContext(34);
+            }
+
+            ShopManager_Scr.instance.ChangeInputField();
+            g_ChangeWindow.SetActive(true);
+            g_ChangeWindow.transform.GetChild(3).GetChild(0).GetComponent<Image>().sprite = s_Profile;
+        }
+        else if(kind == PRODUCT.PREMIUM)
+        {
+            print("프리미엄");
+            ADMobManager_Scr.instance.b_isPremiumMode = true;
+            if (ADMobManager_Scr.instance != null && ADMobManager_Scr.instance.b_isPremiumMode)
+                ADMobManager_Scr.instance.HideNativeAD();
+        }
+    }
+    public void ChangeFont()
+    {
+        TranslateManager_Scr.instance.ChangeFont(t_MoneyContext, TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFont(t_BuyButtonText);
+
+        TranslateManager_Scr.instance.ChangeFont(t_Name, TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFontMaterial(t_Name, TranslateManager_Scr.instance.i_TMPNum + 6);
+        TranslateManager_Scr.instance.ChangeFont(t_Context, TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFontMaterial(t_Context, TranslateManager_Scr.instance.i_TMPNum + 6);
+    }
+
+    public void PremiumBuyFailed()
+    {
+        ADMobManager_Scr.instance.b_isPremiumMode = false;
+    }
+}

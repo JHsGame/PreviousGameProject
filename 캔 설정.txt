@@ -1,0 +1,250 @@
+using JetBrains.Annotations;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class CanStat_Scr : MonoBehaviour
+{
+    #region 캔 UI부분
+    public Image i_Icon;
+    public TextMeshProUGUI t_NextAtk;
+    public TextMeshProUGUI t_NowAtk;
+    public Text t_Condition;
+    public Text t_Price;
+    public Text t_BuyButtonText;
+    public TextMeshProUGUI t_BuyContextText;
+    public Text t_BuyText;
+    public TextMeshProUGUI t_CanLevel;
+    #endregion
+
+    #region 캔 스탯
+    public int i_Level;
+    public string s_Name;
+    public Sprite s_Icon;
+    public int i_BuyPrice;
+    public int i_UpgradePrice;
+    public float f_NowAtk;
+    public float f_NextAtk;
+    public bool b_IsBought;
+    public int i_ListNum;
+    public int i_CanNum;
+    #endregion
+
+    public GameObject go_VendingM;
+    public GameObject g_UpgradeButton;
+    public GameObject g_Lock;
+    public GameObject g_UnLock;
+    // Update is called once per frame
+
+    public TextAsset myTxt;
+    public List<Dictionary<string, object>> CanData;
+
+    private void Start()
+    {
+        CanData = CSVReader.Read(myTxt);
+    }
+
+    void Update()
+    {
+        if (this.gameObject.activeSelf)
+        {
+            ChangeFont();
+            if (b_IsBought)
+            {
+                this.GetComponent<Image>().enabled = true;
+                g_UnLock.SetActive(true);
+                g_Lock.SetActive(false);
+                i_Icon.sprite = s_Icon;
+
+                if (TranslateManager_Scr.instance.b_isKorean)
+                {
+                    t_CanLevel.text = string.Concat("콜라 LV", i_Level.ToString());
+                }
+                else if (TranslateManager_Scr.instance.b_isEnglish || TranslateManager_Scr.instance.b_isIndia)
+                {
+                    t_CanLevel.text = string.Concat("Coke LV", i_Level.ToString());
+                }
+                else if (TranslateManager_Scr.instance.b_isJapanese)
+                {
+                    t_CanLevel.text = string.Concat("コークス LV", i_Level.ToString());
+                }
+                else if (TranslateManager_Scr.instance.b_isChinese)
+                {
+                    t_CanLevel.text = string.Concat("可乐 LV", i_Level.ToString());
+                }
+                else if (TranslateManager_Scr.instance.b_isVietnam)
+                {
+                    t_CanLevel.text = string.Concat("Coca LV", i_Level.ToString());
+                }
+                else if (TranslateManager_Scr.instance.b_isFrance)
+                {
+                    t_CanLevel.text = string.Concat("Coke LV", i_Level.ToString());
+                }
+                else if (TranslateManager_Scr.instance.b_isGermany)
+                {
+                    t_CanLevel.text = string.Concat("Cola LV", i_Level.ToString());
+                }
+                else if (TranslateManager_Scr.instance.b_isItalia)
+                {
+                    t_CanLevel.text = string.Concat("Coke LV", i_Level.ToString());
+                }
+
+                if (TranslateManager_Scr.instance.b_isEnglish || TranslateManager_Scr.instance.b_isIndia || TranslateManager_Scr.instance.b_isItalia || TranslateManager_Scr.instance.b_isGermany
+                    || TranslateManager_Scr.instance.b_isFrance || TranslateManager_Scr.instance.b_isVietnam)
+                {
+                    t_Condition.text = TranslateManager_Scr.instance.TranslateContext(20, "English");
+                }
+                else
+                {
+                    t_Condition.text = TranslateManager_Scr.instance.TranslateContext(20);
+                }
+
+                if (TranslateManager_Scr.instance.b_isJapanese)
+                {
+                    t_CanLevel.GetComponent<RectTransform>().anchoredPosition = new Vector2(135f, -20f);
+                    t_NowAtk.GetComponent<RectTransform>().anchoredPosition = new Vector2(125f, -70f);
+                }
+                else
+                {
+                    t_CanLevel.GetComponent<RectTransform>().anchoredPosition = new Vector2(135f, -10f);
+                    t_NowAtk.GetComponent<RectTransform>().anchoredPosition = new Vector2(125f, -55f);
+                }
+
+                if (CanData[i_Level - 1]["LV"].ToString() != "MAX")
+                    i_UpgradePrice = (int)CanData[i_Level]["Buy"];
+
+                f_NowAtk = (int)CanData[i_Level - 1]["Attack"];
+
+                if (TranslateManager_Scr.instance.b_isKorean || TranslateManager_Scr.instance.b_isJapanese || TranslateManager_Scr.instance.b_isChinese)
+                    t_NowAtk.text = string.Concat(TranslateManager_Scr.instance.TranslateContext(136) + " ");
+                else
+                    t_NowAtk.text = string.Concat(TranslateManager_Scr.instance.TranslateData[136]["English"].ToString() + " ");
+                t_NowAtk.text = string.Concat(t_NowAtk.text, ((int)f_NowAtk).ToString());
+
+                if (CanData[i_Level - 1]["LV"].ToString() != "MAX")
+                {
+                    f_NextAtk = (int)CanData[i_Level]["Attack"];
+                    t_NextAtk.text = string.Concat(TranslateManager_Scr.instance.TranslateContext(150) + " ", ((int)f_NextAtk).ToString());
+                    t_Price.text = string.Concat(i_UpgradePrice.ToString(), "G");
+                }
+                else if (CanData[i_Level - 1]["LV"].ToString() == "MAX")
+                {
+                    t_Condition.text = "MAX";
+                    g_UpgradeButton.GetComponent<Button>().enabled = false;
+                    g_UpgradeButton.transform.GetChild(0).GetComponent<Button>().enabled = false;
+                    t_NextAtk.transform.parent.gameObject.SetActive(false);
+                    if (TranslateManager_Scr.instance.b_isKorean)
+                    {
+                        t_NextAtk.text = "업그레이드 MAX";
+                    }
+                    else if (TranslateManager_Scr.instance.b_isEnglish || TranslateManager_Scr.instance.b_isIndia)
+                    {
+                        t_NextAtk.text = "Upgrade MAX";
+                    }
+                    else if (TranslateManager_Scr.instance.b_isJapanese)
+                    {
+                        t_NextAtk.text = "アップグレード MAX";
+                    }
+                    else if (TranslateManager_Scr.instance.b_isChinese)
+                    {
+                        t_NextAtk.text = "升级 MAX";
+                    }
+                    else if (TranslateManager_Scr.instance.b_isVietnam)
+                    {
+                        t_NextAtk.text = "nâng cấp MAX";
+                    }
+                    else if (TranslateManager_Scr.instance.b_isFrance)
+                    {
+                        t_NextAtk.text = "améliorer MAX";
+                    }
+                    else if (TranslateManager_Scr.instance.b_isGermany)
+                    {
+                        t_NextAtk.text = "Aktualisierung MAX";
+                    }
+                    else if (TranslateManager_Scr.instance.b_isItalia)
+                    {
+                        t_NextAtk.text = "aggiornamento MAX";
+                    }
+                }
+            }
+            else
+            {
+                if (TranslateManager_Scr.instance.b_isEnglish || TranslateManager_Scr.instance.b_isIndia || TranslateManager_Scr.instance.b_isItalia || TranslateManager_Scr.instance.b_isGermany
+                    || TranslateManager_Scr.instance.b_isFrance || TranslateManager_Scr.instance.b_isVietnam)
+                {
+                    t_BuyButtonText.text = TranslateManager_Scr.instance.TranslateContext(23, "English");
+                }
+                else
+                {
+                    t_BuyButtonText.text = TranslateManager_Scr.instance.TranslateContext(23);
+                }
+                t_BuyContextText.text = TranslateManager_Scr.instance.TranslateContext(22);
+
+                t_BuyText.text = string.Concat(i_BuyPrice.ToString(), "G");
+                this.GetComponent<Image>().enabled = false;
+            }
+        }
+    }
+
+    public float GetAtk()
+    {
+        return f_NowAtk;
+    }
+
+    public void OnClickBuyCan()
+    {
+        if (GoldManager_Scr.instance.i_Coin >= i_BuyPrice)
+        {
+            SoundManager_sfx.instance.PlaySE("UI_Click1", false);
+            i_Level++;
+            b_IsBought = true;
+            GoldManager_Scr.instance.i_Coin -= i_BuyPrice;
+            i_UpgradePrice = (int)CanData[i_Level]["Buy"];
+            f_NowAtk = (int)CanData[i_Level - 1]["Attack"];
+
+            go_VendingM.transform.GetComponent<LaunchCan>().Refreash();
+        }
+        else
+        {
+            FailedPurchaseManager_Scr.instance.b_isCoin = true;
+            FailedPurchaseManager_Scr.instance.OnFailedOn();
+        }
+    }
+
+    public void OnLoadLaunchCanNum()
+    {
+        go_VendingM.transform.GetComponent<LaunchCan>().Refreash();
+    }
+
+    public void OnClickUpgradeCan()
+    {
+        if (GoldManager_Scr.instance.i_Coin >= i_UpgradePrice)
+        {
+            SoundManager_sfx.instance.PlaySE("Reinforcement", false);
+            GoldManager_Scr.instance.i_Coin -= i_UpgradePrice;
+            i_Level++;
+        }
+        else
+        {
+            FailedPurchaseManager_Scr.instance.b_isCoin = true;
+            FailedPurchaseManager_Scr.instance.OnFailedOn();
+        }
+    }
+        
+    public void ChangeFont()
+    {
+        TranslateManager_Scr.instance.ChangeFont(t_Condition);
+        TranslateManager_Scr.instance.ChangeFont(t_BuyButtonText);
+        TranslateManager_Scr.instance.ChangeFont(t_NextAtk, TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFont(t_BuyContextText, TranslateManager_Scr.instance.i_TMPNum);
+
+        TranslateManager_Scr.instance.ChangeFont(g_Lock.transform.GetChild(1).GetChild(1).GetComponent<TextMeshProUGUI>(), TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFontMaterial(g_Lock.transform.GetChild(1).GetChild(1).GetComponent<TextMeshProUGUI>(), TranslateManager_Scr.instance.i_TMPNum + 6);
+        TranslateManager_Scr.instance.ChangeFont(t_CanLevel, TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFontMaterial(t_CanLevel, TranslateManager_Scr.instance.i_TMPNum + 6);
+        TranslateManager_Scr.instance.ChangeFont(t_NowAtk, TranslateManager_Scr.instance.i_TMPNum);
+        TranslateManager_Scr.instance.ChangeFontMaterial(t_NowAtk, TranslateManager_Scr.instance.i_TMPNum + 6);
+    }
+}

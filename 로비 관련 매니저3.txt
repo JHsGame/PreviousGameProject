@@ -1,0 +1,149 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class LobbyButtonManager_Scr : MonoBehaviour
+{
+    private static LobbyButtonManager_Scr instance;
+    LobbyCashingManager_Scr cashing;
+    LobbyManager_Scr manager;
+
+    private void Awake()
+    {
+        if (instance != null)
+            return;
+        else
+            instance = this;
+    }
+
+    public static LobbyButtonManager_Scr Instance
+    {
+        get
+        {
+            if (null == instance)
+                return null;
+            return instance;
+        }
+    }
+
+    private void Start()
+    {
+        cashing = LobbyCashingManager_Scr.Instance;
+        manager = LobbyManager_Scr.Instance;
+    }
+
+    public void SelecterOn()
+    {
+        if(cashing.Selecter != null)
+            cashing.Selecter.SetActive(true);
+    }
+
+    public void CharacterSelecter(int _Num)
+    {
+        manager.CharNum = _Num;
+        manager.ReLoadStatUI();
+        cashing.Selecter.SetActive(false);
+    }
+
+    public void OnClickOption()
+    {
+        // 설정 버튼 클릭시 활성화
+        print("설정");
+    }
+
+    public void OnClickChargingGold()
+    {
+        // 재화 충전 버튼
+        print("골드 상점");
+    }
+
+    public void OnClickNickName()
+    {
+        // 닉네임 설정
+        print("닉네임 변경창 활성화");
+    }
+
+    public void changeName(InputField myField)
+    {
+        // 인풋필드창의 내용 가져오기
+        manager.NickName = myField.text;
+        cashing.Name.transform.GetChild(0).GetComponent<Text>().text = manager.NickName;
+        ChatManager_Scr.Instance.NickName = manager.NickName;
+    }
+
+    public void OnClickRandomBox()
+    {
+        // 랜덤 상자 가챠
+        print("상자");
+    }
+
+    public void OnClickCharacterSkin(int num)
+    {
+        // 캐릭터 스킨 선택
+        print("스킨");
+    }
+
+    public void OnClickRanking()
+    {
+        // 랭킹창
+        print("랭킹");
+    }
+
+    public void OnClickAchievements()
+    {
+        // 업적창
+        print("업적");
+    }
+
+    public void OnClickShare()
+    {
+        // 게임 공유
+        print("공유");
+    }
+
+    public void OnClickMission()
+    {
+        // 미션창
+        print("미션");
+    }
+
+    public void OnClickSendMessage()
+    {
+        if(cashing.InputField != null && string.IsNullOrEmpty(cashing.InputField.text))
+        {
+            ChatManager_Scr.Instance.SendChatMessage(cashing.InputField.text);
+            cashing.InputField.text = "";
+        }
+    }
+
+    public void OnClickChat()
+    {
+        // 채팅창
+        if (cashing.Chat != null)
+            cashing.Chat.SetActive(true);
+    }
+
+    public void OnClickChatOff()
+    {
+        if (cashing.Chat != null && cashing.Chat.activeSelf)
+            cashing.Chat.SetActive(false);
+    }
+
+    public void OnClickEvents()
+    {
+        // 이벤트창
+        print("이벤트");
+    }
+
+    public void OnClickSelecterOff()
+    {
+        if (cashing.Selecter.activeSelf)
+            cashing.Selecter.SetActive(false);
+    }
+
+    public void GameStart()
+    {
+        StartCoroutine(manager.LoadScene());
+    }
+}

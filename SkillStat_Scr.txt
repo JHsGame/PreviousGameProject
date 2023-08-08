@@ -1,0 +1,156 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class SkillStat_Scr : MonoBehaviour
+{
+    #region UI부분
+    public Image i_Icon;
+    public Text t_SkillName;
+    public Text t_Money;
+    #endregion
+
+    #region 아이템 정보
+    public Sprite s_Icon;
+    public string s_SkillName;
+    //public int i_Coin;
+    //public int i_Gem;
+    #endregion
+
+    public GameObject go_Canvas;
+
+    //public bool b_isGold = false;
+    int i_ListNum;
+    private void Start()
+    {
+        i_ListNum = transform.GetSiblingIndex();
+    }
+    void Update()
+    {
+        if (this.gameObject.activeSelf)
+        {
+            TranslateManager_Scr.instance.ChangeFont(t_SkillName);
+            i_Icon.sprite = s_Icon;
+            t_SkillName.text = s_SkillName;
+            t_Money.text = StageManager_Scr.instance.needAbility.ToString();
+            /*if (i_Coin > 0)
+            {
+                b_isGold = true;
+                t_Money.text = i_Coin.ToString();
+            }
+            else if (i_Gem > 0)
+            {
+                b_isGold = false;
+                t_Money.text = i_Gem.ToString();
+            }*/
+        }
+    }
+
+    public void OnClickBuySkill()
+    {
+        Player_Skill_Scr.instance.go_ICon.SetActive(true);
+        // 골드 스킬 구입 -> 스킬 활성화 + 현재 보유 골드에서 스킬 골드 가격만큼 차감.
+        if (StageManager_Scr.instance.myAbility >= StageManager_Scr.instance.needAbility)
+        {
+            StageManager_Scr.instance.myAbility = 0;
+            Button_Option.instance.t_Warning.GetComponent<AniEndEvent>().OnWarning();
+            if (i_ListNum == 0)
+            {
+                bool MissSkill = true;
+                for (int i = 0; i < RespawnManager.instance.ActiveBlock.Count; i++)
+                {
+                    if (RespawnManager.instance.ActiveBlock[i].layer == LayerMask.NameToLayer("Skill_Computer"))
+                    {
+                        MissSkill = false;
+                        break;
+                    }
+                }
+                if (!MissSkill)
+                {
+                    Button_Option.instance.go_Notapplicable.SetActive(false);
+                    go_Canvas.transform.GetComponent<Button_Option>().OnClickSkill();
+                    Player_Input.instance.useSkill(0);
+                }
+                else if (MissSkill)
+                {
+                    Button_Option.instance.go_Notapplicable.SetActive(true);
+                    SoundManager_sfx.instance.PlaySE("UI_MissClick1", false);
+                    StageManager_Scr.instance.myAbility += 500;
+                }
+            }
+            else if(i_ListNum == 1)
+            {
+                bool MissSkill = true;
+                for (int i = 0; i < RespawnManager.instance.ActiveBlock.Count; i++)
+                {
+                    if (RespawnManager.instance.ActiveBlock[i].layer == LayerMask.NameToLayer("Skill_Tax"))
+                    {
+                        MissSkill = false;
+                        break;
+                    }
+                }
+                if (!MissSkill)
+                {
+                    Button_Option.instance.go_Notapplicable.SetActive(false);
+                    go_Canvas.transform.GetComponent<Button_Option>().OnClickSkill();
+                    Player_Input.instance.useSkill(1);
+                }
+                else if (MissSkill)
+                {
+                    Button_Option.instance.go_Notapplicable.SetActive(true);
+                    SoundManager_sfx.instance.PlaySE("UI_MissClick1", false);
+                    StageManager_Scr.instance.myAbility += 500;
+                }
+            }
+            else if (i_ListNum == 2)
+            {
+                bool MissSkill = true;
+                for (int i = 0; i < RespawnManager.instance.ActiveBlock.Count; i++)
+                {
+                    if (RespawnManager.instance.ActiveBlock[i].layer == LayerMask.NameToLayer("Skill_Police"))
+                    {
+                        MissSkill = false;
+                        break;
+                    }
+                }
+                if (!MissSkill)
+                {
+                    Button_Option.instance.go_Notapplicable.SetActive(false);
+                    go_Canvas.transform.GetComponent<Button_Option>().OnClickSkill();
+                    Player_Input.instance.useSkill(2);
+                }
+                else if (MissSkill)
+                {
+                    Button_Option.instance.go_Notapplicable.SetActive(true);
+                    SoundManager_sfx.instance.PlaySE("UI_MissClick1", false);
+                    StageManager_Scr.instance.myAbility += 500;
+                }
+            }
+            else if(i_ListNum == 3)
+            {
+                bool MissSkill = true;
+                for (int i = 0; i < RespawnManager.instance.ActiveBlock.Count; i++)
+                {
+                    if (RespawnManager.instance.ActiveBlock[i].layer == LayerMask.NameToLayer("Skill_SCV"))
+                    {
+                        MissSkill = false;
+                        break;
+                    }
+                }
+                if (!MissSkill)
+                {
+                    Button_Option.instance.go_Notapplicable.SetActive(false);
+                    go_Canvas.transform.GetComponent<Button_Option>().OnClickSkill();
+                    Player_Input.instance.useSkill(3);
+                }
+                else if (MissSkill)
+                {
+                    Button_Option.instance.go_Notapplicable.SetActive(true);
+                    SoundManager_sfx.instance.PlaySE("UI_MissClick1", false);
+                    StageManager_Scr.instance.myAbility += 500;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,84 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CameraResolution_Scr : MonoBehaviour
+{
+    Resolution[] resolutions;
+
+    List<int> width = new List<int>();
+    List<int> height = new List<int>();
+
+    float scaleHeight = 0;
+
+    int w = 0;
+    int h = 0;
+
+    private void Awake()
+    {
+        resolutions = Screen.resolutions;
+    }
+
+    void Start()
+    {
+        print(SystemInfo.deviceName + ", " + Screen.currentResolution);
+        Rect rect = this.GetComponent<Camera>().rect;
+
+        if(resolutions.Length > 0)
+        {
+            foreach(var res in resolutions)
+            {
+                width.Add(res.width);
+                height.Add(res.height);
+            }
+
+            w = width[width.Count - 1];
+            h = height[height.Count - 1];
+
+            if(w > h)
+            {
+                if (w > 1920)
+                    w = 1920;
+
+                if (h > 1080)
+                    h = 1080;
+
+                scaleHeight = ((float)Screen.width / Screen.height) / ((float)h / w);
+            }
+
+            else
+            {
+                if (h > 1920)
+                    h = 1920;
+
+                if (w > 1080)
+                    w = 1080;
+
+                scaleHeight = ((float)Screen.width / Screen.height) / ((float)w / h);
+            }
+        }
+        else
+        {
+            w = Screen.currentResolution.width;
+            h = w / 9 * 16;
+            scaleHeight = ((float)Screen.width / Screen.height) / ((float)w / h);
+        }
+
+        float scaleWidth = 1f / scaleHeight;
+
+        if (scaleHeight < 1)
+        {
+            rect.height = scaleWidth;
+            rect.y = (1f - scaleWidth) / 2f;
+        }
+        else
+        {
+            rect.width = scaleHeight;
+            rect.x = (1f - scaleHeight) / 2f;
+        }
+
+        this.GetComponent<Camera>().rect = rect;
+    }
+
+    private void OnPreCull() => GL.Clear(true, true, Color.black);
+}

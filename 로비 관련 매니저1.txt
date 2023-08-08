@@ -1,0 +1,84 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class LobbyCashingManager_Scr : MonoBehaviour
+{
+    private static LobbyCashingManager_Scr instance;
+
+    [SerializeField]
+    private GameObject g_Character;
+    [SerializeField]
+    private GameObject g_Selecter;
+    [SerializeField]
+    private GameObject g_ChattingPannel;
+    [SerializeField]
+    private GameObject g_Class;
+    [SerializeField]
+    private GameObject g_Ranking;
+    [SerializeField]
+    private GameObject g_Achivement;
+    [SerializeField]
+    private GameObject g_Share;
+    [SerializeField]
+    private GameObject g_Mission;
+    [SerializeField]
+    private GameObject g_Chatting;
+    [SerializeField]
+    private GameObject g_Event;
+    [SerializeField]
+    private GameObject g_Title;
+    [SerializeField]
+    private GameObject g_Gold;
+    [SerializeField]
+    private GameObject g_Option;
+    [SerializeField]
+    private GameObject g_Name;
+
+    [SerializeField]
+    private GameObject[] g_Stats;
+
+    #region 채팅
+    [SerializeField]
+    private Text t_channelText;
+    [SerializeField]
+    private InputField t_InputField;
+    #endregion
+
+    private void Awake()
+    {
+        if (instance != null)
+            return;
+        else
+            instance = this;
+    }
+
+    public static LobbyCashingManager_Scr Instance
+    {
+        get
+        {
+            if (null == instance)
+                return null;
+            return instance;
+        }
+    }
+
+    public GameObject Character { get => g_Character; }
+    public GameObject Selecter { get => g_Selecter; }
+    public GameObject Name { get => g_Name; }
+    public GameObject ChatPannel { get => g_ChattingPannel; }
+    public GameObject Class { get => g_Class; }
+    public GameObject Ranking { get => g_Ranking; }
+    public GameObject Achivement { get => g_Achivement; }
+    public GameObject Share { get => g_Share; }
+    public GameObject Mission { get => g_Mission; }
+    public GameObject Chat { get => g_Chatting; }
+    public GameObject Event { get => g_Event; }
+    public GameObject Title { get => g_Title; }
+    public GameObject Gold { get => g_Gold; }
+    public GameObject Option { get => g_Option; }
+    public Text ChannelText { get => t_channelText; set => t_channelText = value; }
+    public InputField InputField { get => t_InputField; set => t_InputField = value; }
+    public GameObject[] Stats { get => g_Stats; }
+}

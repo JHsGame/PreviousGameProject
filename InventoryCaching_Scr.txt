@@ -1,0 +1,58 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class InventoryCashing_Scr : MonoBehaviour
+{
+    private static InventoryCashing_Scr Instance;
+
+    [SerializeField]
+    private bool b_isCombinationMode = false;
+    [SerializeField]
+    private bool b_isSellMode = false;
+
+    [SerializeField]
+    private Transform slotsParent;
+    [SerializeField]
+    private Sprite[] icons;
+    [SerializeField]
+    private Sprite[] bag_icons;
+    [SerializeField]
+    private Sprite[] Hero_icons;
+    [SerializeField]
+    private GameObject inventory_UI;    // 하단에 있는 인벤토리 아이콘.
+    [SerializeField]
+    private GameObject UI_Title;
+    [SerializeField]
+    private GameObject Button_CombinationMode;
+    [SerializeField]
+    private GameObject Button_SellMode;
+    [SerializeField]
+    private GameObject Button_CombinationSell;
+
+    public bool CombinationMode { get => b_isCombinationMode; set => b_isCombinationMode = value; }
+    public bool SellMode { get => b_isSellMode; set => b_isSellMode = value; }
+    public Transform slotParent { get => slotsParent; }
+    public Sprite[] itemIcons { get => icons; }
+    public Sprite[] bagIcons { get => bag_icons; }
+    public Sprite[] Heroicons { get => Hero_icons; }
+    public GameObject invenUI { get => inventory_UI; }
+    public GameObject Title { get => UI_Title; }
+    public GameObject CombinationModeButton { get => Button_CombinationMode; }
+    public GameObject SellModeButton { get => Button_SellMode; }
+    public GameObject DecideButton { get => Button_CombinationSell; }
+    public static InventoryCashing_Scr instance { get => Instance; }
+
+
+    private void Awake()
+    {
+        if (Instance != null)
+        {
+            return;
+        }
+        else
+        {
+            Instance = this;
+        }
+    }
+}

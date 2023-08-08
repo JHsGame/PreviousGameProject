@@ -1,0 +1,41 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class LobbyTranslator_Scr : MonoBehaviour
+{
+    public void TranslateUI()
+    {
+        TranslateManager_Scr trans = TranslateManager_Scr.Instance;
+        LobbyCashingManager_Scr lobby = LobbyCashingManager_Scr.Instance;
+
+        // TranslateContext(씬별로 구분, csv에서 바꿀 내용);
+        GameObject obj = lobby.Achivement;
+        obj.transform.GetChild(0).GetComponent<Text>().text = trans.TranslateContext("Lobby", 0);
+
+        obj = lobby.Class;
+        obj.transform.GetChild(0).GetComponent<Text>().text = trans.TranslateContext("Lobby", 1);
+
+        obj = lobby.Ranking;
+        obj.transform.GetChild(0).GetComponent<Text>().text = trans.TranslateContext("Lobby", 2);
+
+        obj = lobby.Share;
+        obj.transform.GetChild(0).GetComponent<Text>().text = trans.TranslateContext("Lobby", 3);
+
+        obj = lobby.Mission;
+        obj.transform.GetChild(0).GetComponent<Text>().text = trans.TranslateContext("Lobby", 4);
+
+        obj = lobby.Chat;
+        obj.transform.GetChild(0).GetComponent<Text>().text = trans.TranslateContext("Lobby", 5);
+
+        obj = lobby.Event;
+        obj.transform.GetChild(0).GetComponent<Text>().text = trans.TranslateContext("Lobby", 6);
+
+        obj = lobby.Title;
+        obj.transform.GetChild(0).GetComponent<Text>().text = trans.TranslateContext("Lobby", 7);
+
+        obj = lobby.Option;
+        obj.transform.GetChild(0).GetComponent<Text>().text = trans.TranslateContext("Lobby", 8);
+    }
+}
