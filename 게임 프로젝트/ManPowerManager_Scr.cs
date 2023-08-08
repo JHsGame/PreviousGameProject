@@ -129,6 +129,7 @@ public class ManPowerManager_Scr : MonoBehaviour
         t_ParentMans.GetChild(0).gameObject.GetComponent<ManStat_Scr>().g_Upgrade.SetActive(true);
     }
 
+    // 튜토리얼 수행 후 동료 획득
     public void TutorialReward()
     {
         manList.Clear();
@@ -178,7 +179,7 @@ public class ManPowerManager_Scr : MonoBehaviour
     
     void Update()
     {
-
+        // 플레이어 레벨에 따른 동료 최대 획득 수치
         int manCnt = 0;
         if (i_LevelManCount < i_MaxMan)
         {
@@ -432,6 +433,7 @@ public class ManPowerManager_Scr : MonoBehaviour
         }
     }
 
+    // 볼 정렬
     public void SortBall()
     {
         manList.Clear();
@@ -495,7 +497,7 @@ public class ManPowerManager_Scr : MonoBehaviour
             }
         }
 
-                // 공격력이 낮은 순서대로 우선 정렬
+        // 공격력이 낮은 순서대로 우선 정렬
         manList.Sort(delegate (GameObject A, GameObject B)
         {
             if (A.GetComponent<ManStat_Scr>().f_Atk > B.GetComponent<ManStat_Scr>().f_Atk) return 1;
